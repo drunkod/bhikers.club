@@ -45,12 +45,14 @@ around_me:
     bottlerefill: Bottle refills
     sandwich: Sandwichs
     bikeshop: Bike shops
+    grocecy: Grocery store
     toilet: Toilets
   pois:
     shelter: "@:common.shelter_emoji @:around_me.poi_types.shelter"
     hotel: "@:common.hotel_emoji @:around_me.poi_types.hotel"
     campsite: "@:common.campsite_emoji @:around_me.poi_types.campsite"
     restaurant: "@:common.restaurant_emoji @:around_me.poi_types.restaurant"
+    grocery: "@:common.grocery_emoji @:around_me.poi_types.grocery"
     bottlerefill: "@:common.bottlerefill_emoji @:around_me.poi_types.bottlerefill"
     sandwich: "@:common.sandwich_emoji @:around_me.poi_types.sandwich"
     bikeshop: "@:common.bikeshop_emoji @:around_me.poi_types.bikeshop"
@@ -66,6 +68,7 @@ common:
   shelter_emoji: ☔
   hotel_emoji: 🛏️
   campsite_emoji: ⛺
+  grocery_emoji: 🛒
   restaurant_emoji: 🍽️ ☕
   bottlerefill_emoji: 🚰
   sandwich_emoji: 🥪🥐🥖

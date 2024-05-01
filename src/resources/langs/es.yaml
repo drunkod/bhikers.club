@@ -41,6 +41,7 @@ around_me:
     shelter: Refugios
     hotel: Hoteles
     campsite: Campings
+    grocecy: Tienda de comestibles
     restaurant: Restaurantes
     bottlerefill: Rellenos de botellas
     sandwich: Sándwichs

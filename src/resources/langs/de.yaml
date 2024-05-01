@@ -41,6 +41,7 @@ around_me:
     shelter: Unterkünfte
     hotel: Hotels
     campsite: Camping
+    grocecy: Lebensmittelgeschäft
     restaurant: Restaurants
     bottlerefill: Flaschenauffüllungen
     sandwich: Schnellimbiss

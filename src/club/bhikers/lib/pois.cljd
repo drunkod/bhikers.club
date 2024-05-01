@@ -34,6 +34,9 @@
                                           "tourism=picnic_site"]
                               "restaurant" ["amenity=restaurant"
                                             "amenity=cafe"]
+                              "grocery" ["shop=convenience"
+                                         "shop=variety_store"
+                                         "shop=supermarket"]
                               "sandwich" ["shop=bakery"
                                           "shop=pastry"
                                           "cuisine=sandwich"
@@ -72,6 +75,7 @@
                           "shelter_type=weather_shelter" (osm-tag-icon "amenity" "shelter")
                           "shop=bakery" (osm-tag-icon "shop" "bakery")
                           "shop=bicycle" (osm-tag-icon "shop" "bicycle")
+                          "shop=convenience" (osm-tag-icon "shop" "convenience")
                           "shop=pastry" (osm-tag-icon "shop" "bakery")
                           "toilets=yes" (osm-tag-icon "amenity" "toilets")
                           "tourism=alpine_hut"  (osm-tag-icon "tourism" "alpinehut")

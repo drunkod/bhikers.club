@@ -41,6 +41,7 @@ around_me:
     shelter: Abris
     hotel: Hôtels
     campsite: Camping
+    grocecy: Épicerie
     restaurant: Restaurants
     bottlerefill: Eau potable
     sandwich: Sandwichs
