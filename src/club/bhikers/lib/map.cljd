@@ -5,9 +5,16 @@
             ["package:flutter_map_location_marker/flutter_map_location_marker.dart" :as maploc]
             ["dart:async" :as async]
             [club.bhikers.lib.notifications :refer [debug-notif]]
-            [club.bhikers.lib.app :refer [debug-mode? selected-poi-type pois-radius]]
+            [club.bhikers.lib.app :refer [debug-mode?
+                                          selected-poi-type
+                                          pois-radius
+                                          add-prefs-gpx-file
+                                          selected-gpx-file
+                                          select-gpx-file
+                                          unselect-gpx-file]]
             [club.bhikers.lib.utils :refer [l10n-str]]
             [club.bhikers.lib.logging :as logging]
+            [club.bhikers.lib.gpx :refer [load-gpx extract-points]]
             [club.bhikers.lib.position
              :refer
              [new-position-stream-controller
@@ -24,8 +31,10 @@
                          :current-pos-as-center? true
                          :transient-radius @pois-radius
                          :radius @pois-radius
+                         :gpx-route-points nil
                          :align-position-on-update maploc/AlignOnUpdate.always})]
     (when (debug-mode?)
+      ;; debug mode displays messages in a overlay layer on the map
       (add-watch
        map-state :map-message
        (fn [_ _ old-state new-state]
@@ -39,6 +48,23 @@
                (and (empty? msg) (not new-pos)) (swap! map-state assoc :message ulocstr)
                ;; dissoc message only if message was unknown loc
                (and (= msg ulocstr) new-pos) (swap! map-state dissoc :message)))))))
+    (add-watch
+     selected-gpx-file :gpx-loader
+     (fn [_ _ old-path new-path]
+       (when (not= old-path new-path)
+         (if new-path
+           (do
+             (await (select-gpx-file new-path))
+             (swap! map-state assoc :gpx-route-points (extract-points (await (load-gpx new-path))))
+             (await (add-prefs-gpx-file new-path)))
+           (do
+             (await (unselect-gpx-file))
+             (swap! map-state dissoc :gpx-route-points))))))
+
+    ;; (when @selected-gpx-file
+    ;;   (swap! map-state assoc :gpx-route-points (extract-points (await (load-gpx @selected-gpx-file)))))
+
+
     map-state))
 
 (defprotocol disposable-streams
@@ -84,8 +110,8 @@
                       ;; swap position before refreshing pois
                        (swap! map-state assoc :current-pos [lat lon])))))]
 
-        (swap! map-state assoc :streamz
-               {:psc psc :ps ps :apsc apsc :lms lms :pss pss}))
+        (swap! map-state assoc
+               :streamz {:psc psc :ps ps :apsc apsc :lms lms :pss pss}))
       this)
     (location-marker-stream [_]
       (let [{:keys [streamz]} @map-state
@@ -148,6 +174,9 @@
                                  mini
                                  padding
                                  alignment
+                                 addColor
+                                 addColorIcon
+                                 addIcon
                                  zoomInColor
                                  zoomInColorIcon
                                  zoomInIcon
@@ -157,6 +186,7 @@
                                  myLocationColor
                                  myLocationColorIcon
                                  myLocationIcon
+                                 onAdd
                                  onMyLocation
                                  onMyLocationSecondary]
                           :or {minZoom 1
@@ -164,6 +194,9 @@
                                mini false
                                padding 2.0
                                alignment m/Alignment.topRight
+                               addColor nil
+                               addColorIcon nil
+                               addIcon m/Icons.add
                                zoomInColor nil
                                zoomInColorIcon nil
                                zoomInIcon m/Icons.zoom_in
@@ -173,6 +206,7 @@
                                myLocationColor nil
                                myLocationColorIcon nil
                                myLocationIcon  m/Icons.my_location
+                               onAdd (fn [] nil)
                                onMyLocation (fn [] nil)
                                onMyLocationSecondary (fn [] (onMyLocation))}}]
 
@@ -185,6 +219,13 @@
     .mainAxisSize m/MainAxisSize.min
     .children
     [(m/Padding .padding (m/EdgeInsets.only .left padding .top padding .right padding)
+                .child (m/FloatingActionButton
+                        .heroTag "addButton"
+                        .mini mini
+                        .backgroundColor (or addColor (.-primaryColorLight theme))
+                        .onPressed onAdd
+                        .child (m/Icon addIcon .color (or addColorIcon (-> theme .-iconTheme .-color)))))
+     (m/Padding .padding (m/EdgeInsets.only .left padding .top padding .right padding)
                 .child (m/FloatingActionButton
                         .heroTag "zoomInButton"
                         .mini mini

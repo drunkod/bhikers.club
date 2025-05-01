@@ -148,6 +148,7 @@
 (defn subscribe-position-stream ^#/(async/StreamSubscription geo/Position?)
   [^#/(async/Stream geo/Position?) stream listener]
   (logging/d "subscribe to position stream")
-  (.listen stream (fn [^geo/Position? position]
-                    (listener (.-latitude position)
-                              (.-longitude position)))))
+  (.listen stream (fn [position]
+                    (when position
+                      (listener (.-latitude ^geo/Position position)
+                                (.-longitude ^geo/Position position))))))

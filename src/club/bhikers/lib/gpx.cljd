@@ -1,0 +1,34 @@
+(ns club.bhikers.lib.gpx
+  (:require
+   ["package:flutter/services.dart" :refer [rootBundle]]
+   ["package:geoxml/geoxml.dart" :refer [GeoXml Trk Trkseg Wpt Rte]]
+   ["package:latlong2/latlong.dart" :as ll]
+   ["dart:io" :as io :refer [File FileSystemException]]
+   [club.bhikers.lib.logging :as logging]))
+
+(defn extract-trkpts [^GeoXml gpx]
+  (for [trk (.-trks gpx)
+        seg (.-trksegs ^Trk trk)
+        pt  (.-trkpts ^Trkseg seg)]
+    (ll/LatLng (.-lat ^Wpt pt) (.-lon ^Wpt pt))))
+
+(defn extract-rtepts [^GeoXml gpx]
+  (for [rte (.-rtes gpx)
+        pt  (.-rtepts ^Rte rte)]
+    (ll/LatLng (.-lat ^Wpt pt) (.-lon ^Wpt pt))))
+
+(defn extract-points [^GeoXml gpx]
+  (let [rtes (extract-rtepts gpx)]
+    (if (seq rtes)
+      rtes
+      (extract-trkpts gpx))))
+
+(defn ^#/(Future GeoXml?) load-gpx [path & {:keys [from-assets?] :or {from-assets? false}}]
+  (logging/d "loading gpx file (from-assets? " from-assets?"): " path)
+  (try
+    (.fromGpxString GeoXml (if from-assets?
+                            (await (.loadString rootBundle path))
+                            (.readAsStringSync (File path))))
+    (catch FileSystemException ex (logging/d (str ex) nil))))
+
+

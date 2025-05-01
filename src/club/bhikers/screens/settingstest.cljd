@@ -5,7 +5,7 @@
              [club.bhikers.lib.utils :refer [l10n-str]]
              [club.bhikers.lib.app :as app]
              [club.bhikers.lib.logging :as logging]
-             [cljd.test :as t :refer [deftest is]]))
+             [cljd.test :as t :refer [deftest]]))
 
 (deftest titledumbtest
   :tags [:widget]

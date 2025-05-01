@@ -33,6 +33,9 @@ enhance_gpx:
   screen_title: Améliorer GPX
   description: Améliorez la trace GPX avec les points d'intérêt tout le long !
 around_me:
+  add_gpx: Ajouter une trace gpx
+  gpx_file_selector: Sélectionner une trace gpx
+  no_files_gpx_history: Aucun historique
   screen_title: Autour de moi
   description: Points d'intérêt autour de ma position GPS actuelle
   no_permission: Veuillez accorder l'autorisation de localisation
@@ -41,7 +44,7 @@ around_me:
     shelter: Abris
     hotel: Hôtels
     campsite: Camping
-    grocecy: Épicerie
+    grocery: Épicerie
     restaurant: Restaurants
     bottlerefill: Eau potable
     sandwich: Sandwichs

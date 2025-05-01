@@ -33,6 +33,9 @@ enhance_gpx:
   screen_title: Enhance Gpx
   description: Enhance GPX trace with the POIs all along!
 around_me:
+  add_gpx: Add gpx
+  gpx_file_selector: Select gpx
+  no_files_gpx_history: No history
   screen_title: Around me
   description: POIs around my current GPS position
   no_permission: Please grant Location permission
@@ -45,7 +48,7 @@ around_me:
     bottlerefill: Bottle refills
     sandwich: Sandwichs
     bikeshop: Bike shops
-    grocecy: Grocery store
+    grocery: Grocery store
     toilet: Toilets
   pois:
     shelter: "@:common.shelter_emoji @:around_me.poi_types.shelter"

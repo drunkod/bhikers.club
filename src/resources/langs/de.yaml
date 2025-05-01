@@ -33,6 +33,9 @@ enhance_gpx:
   screen_title: GPX verbessern
   description: Verbessern Sie die GPX-Spur mit den POIs entlang der Strecke!
 around_me:
+  add_gpx: GPX-Track hinzufügen
+  gpx_file_selector: GPX-Track auswählen
+  no_files_gpx_history: Kein Verlauf
   screen_title: In meiner Nähe
   description: POIs um meine aktuelle GPS-Position
   no_permission: Bitte erteilen Sie die Standortberechtigung
@@ -41,7 +44,7 @@ around_me:
     shelter: Unterkünfte
     hotel: Hotels
     campsite: Camping
-    grocecy: Lebensmittelgeschäft
+    grocery: Lebensmittelgeschäft
     restaurant: Restaurants
     bottlerefill: Flaschenauffüllungen
     sandwich: Schnellimbiss

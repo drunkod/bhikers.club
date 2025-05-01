@@ -76,6 +76,8 @@
                           "shop=bakery" (osm-tag-icon "shop" "bakery")
                           "shop=bicycle" (osm-tag-icon "shop" "bicycle")
                           "shop=convenience" (osm-tag-icon "shop" "convenience")
+                          "shop=variety_store" (osm-tag-icon "shop" "convenience")
+                          "shop=supermarket" (osm-tag-icon "shop" "convenience")
                           "shop=pastry" (osm-tag-icon "shop" "bakery")
                           "toilets=yes" (osm-tag-icon "amenity" "toilets")
                           "tourism=alpine_hut"  (osm-tag-icon "tourism" "alpinehut")

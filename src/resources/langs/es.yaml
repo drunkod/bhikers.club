@@ -33,6 +33,9 @@ enhance_gpx:
   screen_title: Mejorar GPX
   description: Mejora la ruta GPX con los puntos de interés a lo largo del camino.
 around_me:
+  add_gpx: Agregar pista gpx
+  gpx_file_selector: Seleccionar pista gpx
+  no_files_gpx_history: Sin historial
   screen_title: Alrededor de mí
   description: Puntos de interés alrededor de mi posición GPS actual
   no_permission: Por favor, conceda permiso de ubicación
@@ -41,7 +44,7 @@ around_me:
     shelter: Refugios
     hotel: Hoteles
     campsite: Campings
-    grocecy: Tienda de comestibles
+    grocery: Tienda de comestibles
     restaurant: Restaurantes
     bottlerefill: Rellenos de botellas
     sandwich: Sándwichs

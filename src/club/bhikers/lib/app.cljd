@@ -1,5 +1,6 @@
 (ns club.bhikers.lib.app
   (:require ["package:flutter_settings_screens/flutter_settings_screens.dart" :refer [Settings]]
+            ["package:flutter_test/flutter_test.dart" :as ft]
             ["package:path_provider/path_provider.dart" :refer [getApplicationDocumentsDirectory]]
             ; as app pkg is used by logging, we cant use logging/d
             ["package:flutter/foundation.dart" :refer [kDebugMode debugPrint]]
@@ -24,6 +25,7 @@
                               "hotel"
                               "campsite"
                               "restaurant"
+                              "grocery"
                               "sandwich"
                               "bikeshop"
                               "bottlerefill"
@@ -53,16 +55,51 @@
 (defonce force-debug-mode? (atom false))
 (defonce app-info (atom nil))
 
+
+(defonce gpx-files-history-key "/gpx/files-history")
+(defonce gpx-selected-file "/gpx/selected-file")
+
+(defonce selected-gpx-file (atom nil))
+
+(defn select-gpx-file [path]
+  (let [prefs (await (SharedPreferences.getInstance))]
+    (swap! selected-gpx-file (constantly path))
+    (await (.setString prefs gpx-selected-file path))))
+
+(defn unselect-gpx-file []
+  (let [prefs (await (SharedPreferences.getInstance))]
+    (swap! selected-gpx-file (constantly nil))
+    (await (.setString prefs gpx-selected-file ""))))
+
+(defn prefs-gpx-files []
+  (let [prefs (await (SharedPreferences.getInstance))
+        files (.getStringList prefs gpx-files-history-key)]
+    files))
+
+(defn add-prefs-gpx-file [path]
+  (let [prefs (await (SharedPreferences.getInstance))
+        history-files (await (prefs-gpx-files))]
+    (await (.setStringList prefs gpx-files-history-key (distinct (cons path history-files))))))
+
+(defn remove-prefs-gpx-file [path]
+  (let [prefs (await (SharedPreferences.getInstance))
+        history-files (await (prefs-gpx-files))]
+    (await (.setStringList prefs gpx-files-history-key (remove #(= % path) history-files)))))
+
 (defn init! [& {:keys [mock-mode?] :or {mock-mode? false}}]
   (when mock-mode? (-> SharedPreferences (.setMockInitialValues {})))
 
-  (m/WidgetsFlutterBinding.ensureInitialized)
+  (if mock-mode?
+    (ft/TestWidgetsFlutterBinding.ensureInitialized)
+    (m/WidgetsFlutterBinding.ensureInitialized))
   (settings/Settings.init .cacheProvider (settings/SharePreferenceCache))
   (await (l10n/EasyLocalization.ensureInitialized))
 
-  (let [pkg-info (if mock-mode?
+  (let [prefs (await (SharedPreferences.getInstance))
+        pkg-info (if mock-mode?
                    (PackageInfo .appName "test" .packageName "test" .version "1.0.0" .buildNumber "42" .buildSignature "")
                    (await (.fromPlatform PackageInfo)))
+        _selected-gpx-file (await (.getString prefs gpx-selected-file))
         _duration-setting (#/(.getValue int) Settings "/advanced-location/refresh-location-interval-duration"
                              .defaultValue 30)
         _accuracy-setting (#/(.getValue String) Settings "/advanced-location/refresh-location-accuracy"
@@ -81,6 +118,8 @@
                                  :repo-url  (String.fromEnvironment "REPO_URL" .defaultValue "undef")
                                  :latest-release-api  (String.fromEnvironment "LATEST_RELEASE_API"
                                                                               .defaultValue default-latest-release-api)}))
+    (when _selected-gpx-file
+      (swap! selected-gpx-file (constantly _selected-gpx-file)))
     (swap! refresh-location-distance-filter (constantly (int/tryParse _distance-setting)))
     (swap! refresh-location-interval-duration (constantly (Duration .seconds _duration-setting)))
     (swap! refresh-location-accuracy (constantly (str->location-accuracy _accuracy-setting)))

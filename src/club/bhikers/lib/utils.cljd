@@ -55,16 +55,11 @@
              .options (cache/CacheOptions
                        .store cache-store
                        .policy cache/CachePolicy.forceCache
-                       .hitCacheOnErrorExcept [401 403]
+                       .hitCacheOnErrorCodes [500 503 504]
+                       .hitCacheOnNetworkFailure true
                        .maxStale (Duration .days 1)
                        .priority cache/CachePriority.normal
-                       .allowPostMethod false
-                       .keyBuilder (fn [^dio/RequestOptions req-opts]
-                                     (let [cache-key (->> req-opts
-                                                          .-uri
-                                                          .toString
-                                                          (uuid-v5))]
-                                       cache-key))))))
+                       .allowPostMethod false))))
     (when with-log?
       (.add (.-interceptors api)
             (dio/LogInterceptor)))

@@ -62,3 +62,4 @@ google_service_account.json
 **/fastlane/test_output
 flake.lock
 .aider*
+/android/app/.cxx/

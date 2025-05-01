@@ -1,0 +1,43 @@
+(ns club.bhikers.lib.gpxtest
+  (:require
+   ["package:flutter_test/flutter_test.dart" :as ft]
+   [club.bhikers.lib.app :as app]
+   [club.bhikers.lib.logging :as logging]
+   [club.bhikers.lib.gpx :refer [load-gpx extract-points]]
+   [cljd.test :as t :refer [deftest is]]))
+
+(deftest load-tourmagne-gpx-test
+  :tags [:widget]
+  :runner (ft/testWidgets [tester])
+  (do
+    (logging/d "run tourmagne gpx test")
+    (await (app/init! :mock-mode? true))
+    (await (logging/init! :mock-mode? true))
+    (let [gpx (await (load-gpx "src/resources/tests/tourmagne.gpx"))]
+      (logging/d (str (.-metadata gpx)))
+      (logging/d (str "points: "(count (extract-points gpx))))
+      (is (= 24856 (count (extract-points gpx)))))))
+
+(deftest load-google-gpx-test
+  :tags [:widget]
+  :runner (ft/testWidgets [tester])
+  (do
+    (logging/d "run google gpx test")
+    (await (app/init! :mock-mode? true))
+    (await (logging/init! :mock-mode? true))
+    (let [gpx (await (load-gpx "src/resources/tests/google.gpx"))]
+      (logging/d (str (.-metadata gpx)))
+      (logging/d (str "points: "(count (extract-points gpx))))
+      (is (= 8436 (count (extract-points gpx)))))))
+
+(deftest load-google-gpx-test-error
+  :tags [:widget]
+  :runner (ft/testWidgets [tester])
+  (do
+    (logging/d "run google gpx test")
+    (await (app/init! :mock-mode? true))
+    (await (logging/init! :mock-mode? true))
+    (let [gpx (await (load-gpx "src/resources/tests/icon.png"))]
+      (logging/d (str (.-metadata gpx)))
+      (logging/d (str "points: "(count (extract-points gpx))))
+      (is (= 8436 (count (extract-points gpx)))))))
