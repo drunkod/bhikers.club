@@ -1,7 +1,7 @@
 app:
   title: Bhikers Club
 settings:
-  emerengcy_contact_phone_number: Numéro de téléphone du contact d'urgence
+  emergency_contact_phone_number: Numéro de téléphone du contact d'urgence
   alert_mode: Mode alerte
   fall_detector_group_title: Détecteur de chute
   language: Langue
