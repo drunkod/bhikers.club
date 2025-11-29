@@ -26,6 +26,7 @@ settings:
     de: Alemán
     it: Italiano
     es: Español
+    ru: Ruso
 fall_detector:
   screen_title: Detector de caídas
   description: Envía una alerta a los contactos si se detecta una caída usando el acelerómetro.
@@ -56,3 +57,7 @@ common:
   permission-denied: permiso denegado permanentemente para
 notifications:
   title: Notificaciones
+debuglog:
+  title: Archivo de registro de depuración
+  description: Archivo de registro de depuración
+  no_log_file: El archivo de registro no existe

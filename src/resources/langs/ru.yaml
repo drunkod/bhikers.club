@@ -1,0 +1,82 @@
+app:
+  title: Bhikers Club
+settings:
+  emerengcy_contact_phone_number: Телефон для экстренной связи
+  alert_mode: Режим оповещения
+  fall_detector_group_title: Детектор падения
+  language: Язык
+  default_poi_type: Тип POI по умолчанию
+  general_group_title: Общие
+  screen_title: Настройки
+  advanced_group_title: Расширенные
+  api_query_timeout: Таймаут запроса API (в секундах)
+  timeout_input_validation_error: Таймаут должен быть целым числом 2 < таймаут < 10
+  debug_mode: Включить режим отладки
+  advanced_location_title: Расширенные настройки обновления местоположения
+  location_distance_filter: мин. дистанция
+  distance_filter_input_validation_error: Расстояние должно быть целым числом 0 < d < 10000
+  refresh_location_accuracy: Точность
+  location_accuracy_low: Низкая
+  location_accuracy_medium: Средняя
+  location_accuracy_high: Высокая
+  refresh_location_interval_duration: Интервал (android)
+  langs:
+    en: Английский
+    fr: Французский
+    de: Немецкий
+    it: Итальянский
+    es: Испанский
+    ru: Русский
+fall_detector:
+  screen_title: Детектор падения
+  description: Отправить оповещение контактам при обнаружении падения с помощью акселерометра!
+enhance_gpx:
+  screen_title: Улучшить Gpx
+  description: Улучшить трек GPX с POI по всему маршруту!
+around_me:
+  screen_title: Вокруг меня
+  description: POI вокруг моего текущего местоположения GPS
+  no_permission: Пожалуйста, предоставьте разрешение на определение местоположения
+  unknown_location: Текущее местоположение неизвестно...
+  poi_types:
+    shelter: Укрытия
+    hotel: Отели
+    campsite: Кемпинги
+    restaurant: Рестораны
+    bottlerefill: Источники воды
+    sandwich: Сэндвичи
+    bikeshop: Веломагазины
+    toilet: Туалеты
+  pois:
+    shelter: "@:common.shelter_emoji @:around_me.poi_types.shelter"
+    hotel: "@:common.hotel_emoji @:around_me.poi_types.hotel"
+    campsite: "@:common.campsite_emoji @:around_me.poi_types.campsite"
+    restaurant: "@:common.restaurant_emoji @:around_me.poi_types.restaurant"
+    bottlerefill: "@:common.bottlerefill_emoji @:around_me.poi_types.bottlerefill"
+    sandwich: "@:common.sandwich_emoji @:around_me.poi_types.sandwich"
+    bikeshop: "@:common.bikeshop_emoji @:around_me.poi_types.bikeshop"
+    toilet: "@:common.toilet_emoji @:around_me.poi_types.toilet"
+about:
+  screen_title: О приложении
+  description: Bhikers Club от ParaSitid
+  legalese: 🪲 ParaSitid
+  new_version: Новая версия
+common:
+  close: Закрыть
+  permission-denied: в разрешении окончательно отказано для
+  shelter_emoji: ☔
+  hotel_emoji: 🛏️
+  campsite_emoji: ⛺
+  restaurant_emoji: 🍽️ ☕
+  bottlerefill_emoji: 🚰
+  sandwich_emoji: 🥪🥐🥖
+  bikeshop_emoji: 🚴🔧
+  toilet_emoji: 🚽
+  radius: Радиус поиска
+  no_name: Без названия
+notifications:
+  title: Уведомления
+debuglog:
+  title: Файл журнала отладки
+  description: Файл журнала отладки
+  no_log_file: Файл журнала не существует

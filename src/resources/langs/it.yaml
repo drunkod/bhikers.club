@@ -26,6 +26,7 @@ settings:
     de: Tedesco
     it: Italiano
     es: Spagnolo
+    ru: Russo
 fall_detector:
   screen_title: Rilevatore di caduta
   description: Invia un avviso ai contatti se viene rilevata una caduta con l'accelerometro!
@@ -56,3 +57,7 @@ common:
   permission-denied: autorizzazione permanentemente negata per
 notifications:
   title: Notifiche
+debuglog:
+  title: File di registro di debug
+  description: File di registro di debug
+  no_log_file: Il file di registro non esiste

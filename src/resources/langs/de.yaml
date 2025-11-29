@@ -26,6 +26,7 @@ settings:
     de: Deutsch
     it: Italienisch
     es: Spanisch
+    ru: Russisch
 fall_detector:
   screen_title: Sturzerkennung
   description: Senden Sie eine Benachrichtigung an Kontakte, wenn ein Sturz mit dem Beschleunigungsmesser erkannt wird!
@@ -56,3 +57,7 @@ common:
   permission-denied: Berechtigung dauerhaft verweigert für
 notifications:
   title: Benachrichtigungen
+debuglog:
+  title: Debug-Protokolldatei
+  description: Debug-Protokolldatei
+  no_log_file: Protokolldatei existiert nicht

@@ -26,6 +26,7 @@ settings:
     de: German
     it: Italian
     es: Espagnol
+    ru: Russian
 fall_detector:
   screen_title: Fall Detector
   description: Send alert to contacts if fall detected using accelerometer!
@@ -78,4 +79,4 @@ notifications:
 debuglog:
   title: Debug Log File
   description: Debug Log File
-  no_log_file: Log file doesn't exist
+  no_log_file: Log file does not exist
