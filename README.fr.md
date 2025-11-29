@@ -7,6 +7,9 @@
 
 # 🇫🇷 bhikers club app – Votre compagnon vélo essentiel
 
+🌍 **Lire dans d'autres langues:**
+🇬🇧 [English](README.md) | 🇫🇷 Français | 🇩🇪 [Deutsch](README.de.md) | 🇪🇸 [Español](README.es.md) | 🇮🇹 [Italiano](README.it.md) | 🇷🇺 [Russe](README.ru.md)
+
 <p align="center">
   <img src="misc/Screenshot_2025-02-26_14-07-43.png" width="20%" />
   <img src="misc/Screenshot_2025-02-26_14-10-28.png" width="20%" />

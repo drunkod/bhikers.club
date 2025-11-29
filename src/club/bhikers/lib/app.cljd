@@ -16,7 +16,7 @@
                                             location-accuracy->str]]))
 
 (defonce default-latest-release-api "https://api.github.com/repos/parasitid/bhikers.club/releases/latest")
-(defonce supported-locales ["en" "fr" "it" "es" "de"])
+(defonce supported-locales ["en" "fr" "it" "es" "de" "ru"])
 (defonce default-locale "en")
 (defonce max-pois-radius 10000);; 20km
 (defonce min-pois-radius 500);; 20km

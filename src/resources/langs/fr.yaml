@@ -1,7 +1,7 @@
 app:
   title: Bhikers Club
 settings:
-  emerengcy_contact_phone_number: Numéro de téléphone du contact d'urgence
+  emergency_contact_phone_number: Numéro de téléphone du contact d'urgence
   alert_mode: Mode alerte
   fall_detector_group_title: Détecteur de chute
   language: Langue
@@ -26,6 +26,7 @@ settings:
     de: Allemand
     it: Italien
     es: Espagnol
+    ru: Russe
 fall_detector:
   screen_title: Détecteur de chute
   description: Envoyez une alerte aux contacts si une chute est détectée à l'aide de l'accéléromètre !
@@ -56,3 +57,7 @@ common:
   radius: Rayon de recherche
 notifications:
   title: Notifications
+debuglog:
+  title: Fichier de journal de débogage
+  description: Fichier de journal de débogage
+  no_log_file: Le fichier journal n'existe pas
