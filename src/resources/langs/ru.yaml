@@ -31,7 +31,7 @@ fall_detector:
   screen_title: Детектор падения
   description: Отправить оповещение контактам при обнаружении падения с помощью акселерометра!
 enhance_gpx:
-  screen_title: Улучшить Gpx
+  screen_title: Улучшение GPX
   description: Улучшить трек GPX с POI по всему маршруту!
 around_me:
   screen_title: Вокруг меня
