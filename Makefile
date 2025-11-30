@@ -1,7 +1,7 @@
 .PHONY: test
 GIT_COMMIT := $(shell git rev-parse --short HEAD)
 GIT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
-REPO_URL := "https://github.com/parasitid/bhikers.club"
+REPO_URL := "https://github.com/drunkod/bhikers.club"
 # Extract owner and repo name
 repo_path := $(shell echo $(REPO_URL) | sed -E 's|https://github.com/([^/]+)/([^/]+).*|\1/\2|')
 # Build GitHub API URL for latest release
@@ -12,10 +12,10 @@ BUILD_NUMBER ?= $(shell grep 'version:' pubspec.yaml | cut -d '+' -f2)
 BUILD_ID := $(BUILD_NAME)+$(BUILD_NUMBER)
 
 # Keystore configuration
-KEYSTORE_FILE ?= bhikers-release.jks
-KEYSTORE_ALIAS ?= github-bhiker
+KEYSTORE_FILE ?= drunkod-release.jks
+KEYSTORE_ALIAS ?= github-drunkod
 KEYSTORE_VALIDITY ?= 10000
-KEYSTORE_DNAME ?= "CN=bhikers.club, OU=Dev, O=Bhikers, L=City, ST=State, C=US"
+KEYSTORE_DNAME ?= "CN=drunkod.club, OU=Dev, O=Bhikers, L=City, ST=State, C=US"
 
 ##
 # Bhikers Club

@@ -6,6 +6,7 @@ let
   isCI = builtins.getEnv "CI" == "true";
 
   basePackages = [
+    git
     gnumake
     gradle
     jdk
