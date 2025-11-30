@@ -39,6 +39,9 @@
             platforms-android-33
             platforms-android-34
             platforms-android-35
+            ndk-26-3-11579264
+            # CMake - required for native builds
+            cmake-3-22-1
             # Other useful packages for a development environment.
             # ndk-26-1-10909125
             # skiaparser-3

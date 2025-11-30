@@ -37,7 +37,8 @@ compile: ## Compile ClojureDart code
 
 apk: compile ## Build debug APK
 	flutter build apk \
-             --debug --pub --suppress-analytics
+             --debug --pub --suppress-analytics \
+             --target-platform android-arm,android-arm64
 
 apk-release: compile ## Build release APK
 	@echo "Building APK with:"
@@ -55,7 +56,8 @@ apk-release: compile ## Build release APK
 		--dart-define=LATEST_RELEASE_API=$(LATEST_RELEASE_API) \
 		--build-number "$(BUILD_NUMBER)" \
 		--build-name "$(BUILD_NAME)" \
-		--release --no-pub --suppress-analytics
+		--release --no-pub --suppress-analytics \
+		--target-platform android-arm,android-arm64
 
 clean: ## Clean ClojureDart code
 	clj -M:cljd clean
