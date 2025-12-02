@@ -18,7 +18,10 @@
                                           feat-fall-detector?
                                           refresh-location-distance-filter
                                           refresh-location-interval-duration
-                                          refresh-location-accuracy]]
+                                          refresh-location-accuracy
+                                          tile-servers
+                                          selected-tile-server
+                                          tile-layer-type]]
             [cljd.flutter :as f]))
 
 
@@ -66,6 +69,24 @@
                                    l10n/BuildContextEasyLocalizationExtension
                                    (.setLocale (m/Locale %)))
                                nil))])]
+            [(settings/SettingsGroup
+              .title (l10n-str "settings.map_group_title")
+              .children
+              [(#/(settings/DropDownSettingsTile String)
+                .leading (m/Icon m/Icons.map)
+                .settingKey "/general/tile-server"
+                .title (l10n-str "settings.tile_server")
+                .values (into {} (map (fn [[id {:keys [name]}]] [id name]) tile-servers))
+                .selected @selected-tile-server
+                .onChange #(swap! selected-tile-server (constantly %)))
+               (#/(settings/DropDownSettingsTile String)
+                .leading (m/Icon m/Icons.layers)
+                .settingKey "/general/tile-layer-type"
+                .title (l10n-str "settings.tile_layer_type")
+                .values {"raster" (l10n-str "settings.tile_layer_raster")
+                         "vector" (l10n-str "settings.tile_layer_vector")}
+                .selected (name @tile-layer-type)
+                .onChange #(swap! tile-layer-type (constantly (keyword %))))])]
             [(settings/SettingsGroup
               .title  (l10n-str "settings.advanced_location_title")
               .children

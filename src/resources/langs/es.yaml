@@ -8,6 +8,11 @@ settings:
   general_group_title: General
   default_poi_type: Tipo de POI predeterminado
   screen_title: Configuración
+  map_group_title: Mapa
+  tile_server: Servidor de teselas
+  tile_layer_type: Tipo de capa de teselas
+  tile_layer_raster: Raster
+  tile_layer_vector: Vector
   advanced_group_title: Avanzado
   api_query_timeout: Tiempo de espera de consulta de api (en segundos)
   timeout_input_validation_error: El tiempo de espera debe ser un entero válido tal que 2 < tiempo de espera < 10

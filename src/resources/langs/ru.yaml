@@ -8,6 +8,11 @@ settings:
   default_poi_type: Тип POI по умолчанию
   general_group_title: Общие
   screen_title: Настройки
+  map_group_title: Карта
+  tile_server: Сервер тайлов
+  tile_layer_type: Тип слоя тайлов
+  tile_layer_raster: Растровый
+  tile_layer_vector: Векторный
   advanced_group_title: Расширенные
   api_query_timeout: Таймаут запроса API (в секундах)
   timeout_input_validation_error: Таймаут должен быть целым числом 2 < таймаут < 10

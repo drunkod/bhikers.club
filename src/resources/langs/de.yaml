@@ -8,6 +8,11 @@ settings:
   general_group_title: Allgemein
   default_poi_type: Standard-POI-Typ
   screen_title: Einstellungen
+  map_group_title: Karte
+  tile_server: Kartenserver
+  tile_layer_type: Kachelebene Typ
+  tile_layer_raster: Raster
+  tile_layer_vector: Vektor
   advanced_group_title: Fortgeschritten
   api_query_timeout: API-Abfrage-Timeout (in Sekunden)
   timeout_input_validation_error: Das Timeout muss eine gültige Ganzzahl sein, wobei 2 < Timeout < 10

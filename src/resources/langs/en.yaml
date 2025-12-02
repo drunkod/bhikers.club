@@ -8,6 +8,11 @@ settings:
   default_poi_type: Default POI Type
   general_group_title: General
   screen_title: Settings
+  map_group_title: Map
+  tile_server: Tile Server
+  tile_layer_type: Tile Layer Type
+  tile_layer_raster: Raster
+  tile_layer_vector: Vector
   advanced_group_title: Advanced
   api_query_timeout: API query timeout (in seconds)
   timeout_input_validation_error: Timeout must be a valid integer 2 < timeout < 10

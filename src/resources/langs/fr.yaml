@@ -8,6 +8,11 @@ settings:
   general_group_title: Général
   screen_title: Paramètres
   default_poi_type: Type de POI par défaut
+  map_group_title: Carte
+  tile_server: Serveur de tuiles
+  tile_layer_type: Type de couche de tuiles
+  tile_layer_raster: Raster
+  tile_layer_vector: Vecteur
   advanced_group_title: Avancé
   api_query_timeout: délai d'attente de la requête api (en secondes)
   timeout_input_validation_error: Le délai d'attente doit être un entier valide tel que 2 < délai d'attente < 10

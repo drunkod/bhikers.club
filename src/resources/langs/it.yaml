@@ -8,6 +8,11 @@ settings:
   general_group_title: Generale
   default_poi_type: Tipo di POI predefinito
   screen_title: Impostazioni
+  map_group_title: Mappa
+  tile_server: Server piastrelle
+  tile_layer_type: Tipo di livello tessera
+  tile_layer_raster: Raster
+  tile_layer_vector: Vettore
   advanced_group_title: Avanzato
   api_query_timeout: Timeout della query api (in secondi)
   timeout_input_validation_error: Il timeout deve essere un intero valido tale che 2 < timeout < 10
