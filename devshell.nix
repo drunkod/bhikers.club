@@ -10,7 +10,7 @@ let
     gnumake
     gradle
     jdk
-    flutter329
+    flutter
     clojure
     android-sdk
   ];

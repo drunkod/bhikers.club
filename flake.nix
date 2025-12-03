@@ -39,7 +39,9 @@
             platforms-android-33
             platforms-android-34
             platforms-android-35
-            ndk-26-3-11579264
+            platforms-android-36
+            # ndk-26-3-11579264
+            ndk-28-2-13676358 
             # CMake - required for native builds
             cmake-3-22-1
             # Other useful packages for a development environment.

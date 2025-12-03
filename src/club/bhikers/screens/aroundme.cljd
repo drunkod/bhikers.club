@@ -5,6 +5,7 @@
             ["package:flutter_map_location_marker/flutter_map_location_marker.dart" :as maploc]
             ["package:flutter_map_cancellable_tile_provider/flutter_map_cancellable_tile_provider.dart"
              :refer [CancellableNetworkTileProvider]]
+            ["package:flutter_map_maplibre/flutter_map_maplibre.dart" :refer [MapLibreLayer]]
             ["package:flutter_map_compass/flutter_map_compass.dart" :refer [MapCompass]]
             ["package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart"
              :refer [MarkerClusterLayerWidget MarkerClusterLayerOptions]]
@@ -12,7 +13,11 @@
                                           max-pois-radius
                                           icicommencelaventure
                                           vertouplage
-                                          debug-mode?]]
+                                          debug-mode?
+                                          selected-tile-server
+                                          tile-servers
+                                          tile-layer-type
+                                          default-maplibre-style]]
             [club.bhikers.lib.map :as map]
             [club.bhikers.screens.common :refer [app-bar drawer]]
             [club.bhikers.lib.pois :refer [dynamic-map-pois
@@ -173,7 +178,10 @@
    :bind {:map-state (map/new-state)}
    :get [:map-state m/Theme]
    :managed [dms (-> map-state map/->state-streams map/init!) :dispose map/dispose!]
-   :watch [{:keys [align-position-on-update current-pos-as-center? current-center]} map-state]
+   ;; FIX: Remove @ to watch the atom references, not their values
+   :watch [{:keys [align-position-on-update current-pos-as-center? current-center]} map-state
+           tile-server selected-tile-server
+           layer-type tile-layer-type]
    (m/Scaffold
     .key scaffold-key
     .appBar (app-bar :additional-actions
@@ -198,11 +206,14 @@
                ;; if user interacted with the map
                .onPositionChanged (fn [_ hasGesture] (when hasGesture (map/stop-alignment! dms))))
      .children
-     [(fmap/TileLayer
-       .urlTemplate "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-       .userAgentPackageName "club.bhikers"
-       .tileProvider (CancellableNetworkTileProvider)
-       .maxZoom 18)
+     [(if (= layer-type :raster)
+        (fmap/TileLayer
+         .urlTemplate (:url (get tile-servers tile-server))
+         .userAgentPackageName "club.bhikers"
+         .tileProvider (CancellableNetworkTileProvider)
+         .maxZoom 18)
+        (MapLibreLayer.
+         .initStyle default-maplibre-style))
       (around-me-pois-markers-widget)
       (maploc/CurrentLocationLayer
        .style (new-current-location-marker-style current-pos-as-center? theme)
