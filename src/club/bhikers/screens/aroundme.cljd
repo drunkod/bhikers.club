@@ -1,83 +1,67 @@
 (ns club.bhikers.screens.aroundme
-  (:require ["package:flutter/material.dart" :as m]
-            ["package:flutter_map/flutter_map.dart" :as fmap]
-            ["package:latlong2/latlong.dart" :refer [LatLng]]
-            ["package:flutter_map_location_marker/flutter_map_location_marker.dart" :as maploc]
-            ["package:flutter_map_cancellable_tile_provider/flutter_map_cancellable_tile_provider.dart"
-             :refer [CancellableNetworkTileProvider]]
-            ["package:flutter_map_maplibre/flutter_map_maplibre.dart" :refer [MapLibreLayer]]
-            ["package:flutter_map_compass/flutter_map_compass.dart" :refer [MapCompass]]
-            [club.bhikers.lib.app :refer [icicommencelaventure
-                                          vertouplage
-                                          debug-mode?
-                                          selected-tile-server
-                                          tile-servers
-                                          tile-layer-type
-                                          default-maplibre-style]]
-            [club.bhikers.lib.map :as map]
-            [club.bhikers.screens.common :refer [app-bar drawer]]
-            ;; Imported Modules
-            [club.bhikers.screens.aroundme.ui :as ui]
-            [club.bhikers.screens.aroundme.layers :as layers]
-            [cljd.flutter :as f]))
+(:require ["package:flutter/material.dart" :as m]
+["package:flutter_map/flutter_map.dart" :as fmap]
+["package:latlong2/latlong.dart" :refer [LatLng]]
+["package:flutter_map_location_marker/flutter_map_location_marker.dart" :as maploc]
+["package:flutter_map_compass/flutter_map_compass.dart" :refer [MapCompass]]
+[club.bhikers.lib.app :refer [icicommencelaventure
+vertouplage
+debug-mode?]]
+[club.bhikers.lib.map :as map]
+[club.bhikers.screens.common :refer [app-bar drawer]]
+;; Imported Modules
+[club.bhikers.screens.aroundme.ui :as ui]
+[club.bhikers.screens.aroundme.layers :as layers]
+[cljd.flutter :as f]))
 
 ;; Around me ( +/- 10/20km): POIs*
 
 (defn around-me-screen []
-  (f/widget
-   :let [scaffold-key (#/(m/GlobalKey m/ScaffoldState))]
-   :bind {:map-state (map/new-state)}
-   :get [:map-state m/Theme]
-   :managed [dms (-> map-state map/->state-streams map/init!) :dispose map/dispose!]
-   :watch [{:keys [align-position-on-update current-pos-as-center? current-center]} map-state
-           tile-server selected-tile-server
-           layer-type tile-layer-type]
-   (m/Scaffold
-    .key scaffold-key
-    .appBar (app-bar :additional-actions
-                     [(m/IconButton .icon (m/Icon m/Icons.layers)
-                                    .tooltip "layers"
-                                    .onPressed #(-> scaffold-key
-                                                    .-currentState
-                                                    .openEndDrawer))])
-    .drawer (drawer)
-    .endDrawer (ui/end-drawer)
-    .body
-    (fmap/FlutterMap
-     .options (fmap/MapOptions
-               .initialZoom 14
-               .initialCenter (if (debug-mode?) vertouplage icicommencelaventure)
-               .minZoom 0
-               .maxZoom 18
-               .onLongPress (fn [_ ^LatLng point]
-                              (map/new-center! dms [(.-latitude point) (.-longitude point)]))
+(f/widget
+:let [scaffold-key (#/(m/GlobalKey m/ScaffoldState))]
+:bind {:map-state (map/new-state)}
+:get [:map-state m/Theme]
+:managed [dms (-> map-state map/->state-streams map/init!) :dispose map/dispose!]
+:watch [{:keys [align-position-on-update current-pos-as-center? current-center]} map-state]
+(m/Scaffold
+.key scaffold-key
+.appBar (app-bar :additional-actions
+[(m/IconButton .icon (m/Icon m/Icons.layers)
+.tooltip "layers"
+.onPressed #(-> scaffold-key
+.-currentState
+.openEndDrawer))])
+.drawer (drawer)
+.endDrawer (ui/end-drawer)
+.body
+(fmap/FlutterMap
+.options (fmap/MapOptions
+.initialZoom 14
+.initialCenter (if (debug-mode?) vertouplage icicommencelaventure)
+.minZoom 0
+.maxZoom 18
+.onLongPress (fn [_ ^LatLng point]
+(map/new-center! dms [(.-latitude point) (.-longitude point)]))
 
-               ;; Stop aligning the location marker to the center of the map widget
-               ;; if user interacted with the map
-               .onPositionChanged (fn [_ hasGesture] (when hasGesture (map/stop-alignment! dms))))
-     .children
-     [(if (= layer-type :raster)
-        (fmap/TileLayer
-         .urlTemplate (:url (get tile-servers tile-server))
-         .userAgentPackageName "club.bhikers"
-         .tileProvider (CancellableNetworkTileProvider)
-         .maxZoom 18)
-        (MapLibreLayer.
-         .initStyle default-maplibre-style))
-      (layers/pois-markers-widget)
-      (maploc/CurrentLocationLayer
-       .style (layers/current-location-marker-style current-pos-as-center? theme)
-       .positionStream (map/location-marker-stream dms)
-       .alignPositionStream (map/align-position-stream dms)
-       .alignPositionOnUpdate align-position-on-update
-       .alignDirectionOnUpdate maploc/AlignOnUpdate.never)
-      (map/control-buttons :alignment m/Alignment.bottomRight
-                           :onMyLocation (map/align-on-current-pos-callback dms false)
-                           :onMyLocationSecondary (map/align-on-current-pos-callback dms true))
-      (fmap/Scalebar
-       .textStyle (m/TextStyle .color m/Colors.black .fontSize 14)
-       .alignment m/Alignment.bottomLeft
-       .length fmap/ScalebarLength.m)
-      (MapCompass.cupertino .alignment m/Alignment.topLeft)
-      (layers/current-center-marker current-pos-as-center? current-center)
-      (map/msg)]))))
+;; Stop aligning the location marker to the center of the map widget
+;; if user interacted with the map
+.onPositionChanged (fn [_ hasGesture] (when hasGesture (map/stop-alignment! dms))))
+.children
+[(layers/base-map-layer)
+(layers/pois-markers-widget)
+(maploc/CurrentLocationLayer
+.style (layers/current-location-marker-style current-pos-as-center? theme)
+.positionStream (map/location-marker-stream dms)
+.alignPositionStream (map/align-position-stream dms)
+.alignPositionOnUpdate align-position-on-update
+.alignDirectionOnUpdate maploc/AlignOnUpdate.never)
+(map/control-buttons :alignment m/Alignment.bottomRight
+:onMyLocation (map/align-on-current-pos-callback dms false)
+:onMyLocationSecondary (map/align-on-current-pos-callback dms true))
+(fmap/Scalebar
+.textStyle (m/TextStyle .color m/Colors.black .fontSize 14)
+.alignment m/Alignment.bottomLeft
+.length fmap/ScalebarLength.m)
+(MapCompass.cupertino .alignment m/Alignment.topLeft)
+(layers/current-center-marker current-pos-as-center? current-center)
+(map/msg)]))))

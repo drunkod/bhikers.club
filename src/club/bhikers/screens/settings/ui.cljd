@@ -1,0 +1,166 @@
+(ns club.bhikers.screens.settings.ui
+  (:require ["package:flutter/material.dart" :as m]
+            ["package:flutter_settings_screens/flutter_settings_screens.dart" :as settings]
+            ["package:easy_localization/easy_localization.dart" :as l10n]
+            [club.bhikers.lib.utils :refer [l10n-str
+                                            str->int
+                                            str->location-accuracy
+                                            location-accuracy->str]]
+            [club.bhikers.lib.app :refer [supported-poi-types selected-poi-type
+                                          supported-locales default-locale
+                                          force-debug-mode?
+                                          max-pois-radius
+                                          min-pois-radius
+                                          pois-radius
+                                          api-query-timeout
+                                          refresh-location-distance-filter
+                                          refresh-location-interval-duration
+                                          refresh-location-accuracy
+                                          raster-tile-servers
+                                          vector-tile-styles
+                                          selected-tile-server
+                                          tile-layer-type]]
+            [cljd.flutter :as f]))
+
+;; =============================================================================
+;; General Settings
+;; =============================================================================
+
+(defn general-group [ctx]
+  (settings/SettingsGroup
+   .title  (l10n-str "settings.general_group_title")
+   .children
+   [(settings/SliderSettingsTile
+     .leading (m/Icon m/Icons.adjust)
+     .settingKey "/general/pois-radius"
+     .title (l10n-str "common.radius")
+     .defaultValue 1000
+     .min min-pois-radius
+     .max max-pois-radius
+     .onChange #(swap! pois-radius (constantly %))
+     .step 500)
+    (#/(settings/DropDownSettingsTile String)
+     .leading (m/Icon m/Icons.location_searching)
+     .settingKey "/general/default-poi-type"
+     .title  (l10n-str "settings.default_poi_type")
+     .values (into {} (map (fn [poi] [poi (l10n-str (str "around_me.pois." poi))])
+                           supported-poi-types))
+     .selected @selected-poi-type
+     .onChange #(swap! selected-poi-type (constantly %)))
+    (#/(settings/DropDownSettingsTile String)
+     .leading (m/Icon m/Icons.language)
+     .settingKey "/general/language"
+     .title  (l10n-str "settings.language")
+     .values (into {} (map (fn [lang] [lang (l10n-str (str "settings.langs." lang))])
+                           supported-locales))
+     .selected default-locale
+     .onChange #(do (-> ctx
+                        l10n/BuildContextEasyLocalizationExtension
+                        (.setLocale (m/Locale %)))
+                    nil))]))
+
+;; =============================================================================
+;; Map Settings
+;; =============================================================================
+
+(defn map-group []
+  (f/widget
+   :watch [layer-type tile-layer-type
+           selected-server selected-tile-server]
+   (settings/SettingsGroup
+    .title (l10n-str "settings.map_group_title")
+    .children
+    [;; Tile Layer Type Selector
+     (#/(settings/DropDownSettingsTile String)
+      .leading (m/Icon m/Icons.layers)
+      .settingKey "/general/tile-layer-type"
+      .title (l10n-str "settings.tile_layer_type")
+      .values {"raster" (l10n-str "settings.tile_layer_raster")
+               "vector" (l10n-str "settings.tile_layer_vector")}
+      .selected (name layer-type)
+      .onChange #(let [new-type (keyword %)]
+                   (swap! tile-layer-type (constantly new-type))
+                   ;; Reset server selection to default of new type to avoid invalid state
+                   (let [new-default (if (= new-type :raster) "osm" "protomaps")]
+                     (swap! selected-tile-server (constantly new-default)))))
+
+     ;; Tile Server Selector
+     (let [is-raster (= layer-type :raster)
+           options (if is-raster raster-tile-servers vector-tile-styles)
+           ;; Use separate keys to avoid value mismatch crashes
+           setting-key (if is-raster "/general/tile-server/raster" "/general/tile-server/vector")
+           ;; Ensure selected value exists in options, else fallback
+           current-val (if (contains? options selected-server) selected-server (first (keys options)))]
+       (#/(settings/DropDownSettingsTile String)
+        ;; Key forces rebuild when type changes, ensuring cleaner state transition
+        .key (m/ValueKey setting-key)
+        .leading (m/Icon m/Icons.map)
+        .settingKey setting-key
+        .title (l10n-str "settings.tile_server")
+        .values (into {} (map (fn [[id {:keys [name]}]] [id name]) options))
+        .selected current-val
+        .onChange #(swap! selected-tile-server (constantly %))))])))
+
+;; =============================================================================
+;; Location Settings
+;; =============================================================================
+
+(defn advanced-location-group []
+  (settings/SettingsGroup
+   .title  (l10n-str "settings.advanced_location_title")
+   .children
+   [(settings/TextInputSettingsTile
+     .settingKey "/advanced-location/refresh-location-distance-filter"
+     .title (l10n-str "settings.location_distance_filter")
+     .keyboardType m/TextInputType.number
+     .onChange #(let [distance (str->int % 0 10000)]
+                  (when distance (swap! refresh-location-distance-filter (constantly distance))))
+     .validator #(when (not (str->int % 0 10000))
+                   (l10n-str "settings.distance_filter_input_validation_error"))
+     .initialValue (str @refresh-location-distance-filter))
+    (#/(settings/DropDownSettingsTile String)
+     .leading (m/Icon m/Icons.location_searching)
+     .settingKey "/advanced-location/refresh-location-accuracy"
+     .title  (l10n-str "settings.refresh_location_accuracy")
+     .values {"low" (l10n-str "settings.location_accuracy_low")
+              "medium" (l10n-str "settings.location_accuracy_medium")
+              "high" (l10n-str "settings.location_accuracy_high")}
+     .selected (location-accuracy->str @refresh-location-accuracy)
+     .onChange #(swap! refresh-location-accuracy (constantly (str->location-accuracy %))))
+    (#/(settings/DropDownSettingsTile int)
+     .leading (m/Icon m/Icons.location_searching)
+     .settingKey "/advanced-location/refresh-location-interval-duration"
+     .title  (l10n-str "settings.refresh_location_interval_duration")
+     .values {5 "5s"
+              30 "30s"
+              60 "1m"
+              (* 5 60) "5m"
+              (* 10 60) "10m"
+              (* 30 60) "30m"
+              (* 60 60) "1h"}
+     .selected (.-inSeconds ^Duration @refresh-location-interval-duration)
+     .onChange #(swap! refresh-location-interval-duration (constantly
+                                                           (Duration .seconds %))))]))
+
+;; =============================================================================
+;; Advanced Settings
+;; =============================================================================
+
+(defn advanced-group []
+  (settings/SettingsGroup
+   .title  (l10n-str "settings.advanced_group_title")
+   .children
+   [(settings/TextInputSettingsTile
+     .settingKey "/advanced/api-query-timeout"
+     .title (l10n-str "settings.api_query_timeout")
+     .keyboardType m/TextInputType.number
+     .onChange #(let [timeout (str->int % 2 10)]
+                  (when timeout (swap! api-query-timeout (constantly timeout))))
+     .validator #(when (not (str->int % 2 10))
+                   (l10n-str "settings.timeout_input_validation_error"))
+     .initialValue (str @api-query-timeout))
+    (settings/SwitchSettingsTile
+     .leading (m/Icon m/Icons.bug_report)
+     .settingKey "/advanced/debug-mode?"
+     .title (l10n-str "settings.debug_mode")
+     .onChange #(swap! force-debug-mode? (constantly %)))]))

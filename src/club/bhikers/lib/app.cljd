@@ -15,8 +15,8 @@
                                             str->location-accuracy
                                             location-accuracy->str]]))
 
+
 (defonce default-latest-release-api "https://api.github.com/repos/parasitid/bhikers.club/releases/latest")
-(defonce default-maplibre-style "https://api.protomaps.com/styles/v2/light.json?key=48c711a2fc69c6f0")
 (defonce supported-locales ["en" "fr" "it" "es" "de" "ru"])
 (defonce default-locale "en")
 (defonce max-pois-radius 10000);; 20km
@@ -33,7 +33,11 @@
 (defonce default-poi-type "sandwich")
 (defonce selected-poi-type (atom default-poi-type))
 
-(defonce tile-servers
+;; =============================================================================
+;; MAP CONFIGURATION
+;; =============================================================================
+
+(defonce raster-tile-servers
   {"osm" {:name "OpenStreetMap"
           :url "https://tile.openstreetmap.org/{z}/{x}/{y}.png"}
    "otm" {:name "OpenTopoMap"
@@ -41,10 +45,19 @@
    "cyclosm" {:name "CyclOSM"
               :url "https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png"}})
 
+(defonce vector-tile-styles
+  {"protomaps" {:name "MapLibre (Protomaps)"
+                :url "https://api.protomaps.com/styles/v2/light.json?key=48c711a2fc69c6f0"}})
+
 (defonce selected-tile-server (atom "osm"))
 (defonce tile-layer-type (atom :raster))
+
 (defonce icicommencelaventure (ll/LatLng 48.51479 2.65053))
 (defonce vertouplage (ll/LatLng 47.1612 -1.4778))
+
+;; =============================================================================
+;; APP STATE
+;; =============================================================================
 
 (defonce api-query-timeout (atom 3))
 
@@ -85,8 +98,18 @@
         _query-timeout-setting (#/(.getValue String) Settings "/advanced/api-query-timeout" .defaultValue "5")
         _debug-setting (#/(.getValue bool) Settings "/advanced/debug-mode?" .defaultValue false)
         _poi-type-setting (#/(.getValue String) Settings "/general/default-poi-type" .defaultValue default-poi-type)
-        _tile-server-setting (#/(.getValue String) Settings "/general/tile-server" .defaultValue "osm")
-        _tile-layer-type-setting (#/(.getValue String) Settings "/general/tile-layer-type" .defaultValue "raster")]
+
+        ;; Map Init Logic: determine which server key to read based on layer type
+        _tile-layer-type-setting (#/(.getValue String) Settings "/general/tile-layer-type" .defaultValue "raster")
+
+        ;; Dynamic key selection:
+        server-key (if (= _tile-layer-type-setting "raster")
+                       "/general/tile-server/raster"
+                       "/general/tile-server/vector")
+        default-server (if (= _tile-layer-type-setting "raster") "osm" "protomaps")
+
+        _tile-server-setting (#/(.getValue String) Settings server-key .defaultValue default-server)]
+
     (swap! app-info (constantly {:build-name (.-version pkg-info)
                                  :build-number (.-buildNumber pkg-info)
                                  :app-name (.-appName pkg-info)
