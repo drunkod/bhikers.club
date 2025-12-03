@@ -1,0 +1,82 @@
+(ns club.bhikers.screens.aroundme.ui
+  (:require ["package:flutter/material.dart" :as m]
+            [club.bhikers.lib.app :refer [supported-poi-types max-pois-radius]]
+            [club.bhikers.lib.pois :refer [edit-poi
+                                           route-to-poi
+                                           poi->title-widget
+                                           poi->attributes-listview]]
+            [club.bhikers.lib.logging :as logging]
+            [club.bhikers.lib.utils :refer [l10n-str]]
+            [cljd.flutter :as f]))
+
+;; =============================================================================
+;; Right Drawer (Settings)
+;; =============================================================================
+
+(defn end-drawer []
+  (f/widget
+   :get [:map-state
+         m/Navigator]
+   :watch [{:keys [selected-poi-type transient-radius]} map-state]
+   m/Drawer
+   (m/ListView
+    .padding (m/EdgeInsets.all 2.0)
+    .children
+    (concat
+     (map (fn [poi] (m/RadioListTile
+                     .title (m/Text (l10n-str (str "around_me.pois." poi)))
+                     .value poi
+                     .groupValue selected-poi-type
+                     .onChanged (fn [val]
+                                  (when (not= val selected-poi-type)
+                                    (logging/d "changed poi type to " val)
+                                    (swap! map-state assoc :selected-poi-type val)
+                                    (.pop navigator)))))
+          supported-poi-types)
+     [(m/Row
+       .children
+       [(f/widget
+         (m/Expanded .flex 2)
+         (m/Text (str (l10n-str "common.radius") "\n(" transient-radius "m)")
+                 .overflow m/TextOverflow.ellipsis
+                 .softWrap true .maxLines 2))
+        (f/widget
+         (m/Expanded .flex 4)
+         (m/Slider
+          .value transient-radius
+          .max max-pois-radius
+          .divisions 5
+          .label (str transient-radius "m")
+          .onChanged #(swap! map-state assoc :transient-radius (.round ^double %))
+          .onChangeEnd (fn [_] (swap! map-state assoc :radius transient-radius))))])]))))
+
+;; =============================================================================
+;; Bottom Sheet (POI Info)
+;; =============================================================================
+
+(defn show-poi-info [ctx poi]
+  (m/showModalBottomSheet
+   .context ctx
+   .isScrollControlled true
+   .shape (m/RoundedRectangleBorder .borderRadius (m/BorderRadius.vertical .top (m/Radius.circular 16)))
+   .builder (f/build
+             (f/widget
+              (m/Container .height 300 .padding (m/EdgeInsets.all 16))
+              (m/Column .mainAxisSize m/MainAxisSize.min
+                        .children [(m/Row
+                                    .children [(poi->title-widget poi)
+                                               (f/widget
+                                                (m/Row
+                                                 .mainAxisAlignment m/MainAxisAlignment.end
+                                                 .children [(m/IconButton .icon (m/Icon m/Icons.edit .size 25)
+                                                                          .tooltip (l10n-str "edit-everydoor")
+                                                                          .onPressed #(do (edit-poi poi)
+                                                                                          nil))
+                                                            (m/IconButton .icon (m/Icon m/Icons.turn_right .size 25)
+                                                                          .tooltip (l10n-str "route-to-poi")
+                                                                          .onPressed #(do (route-to-poi poi)
+                                                                                          nil))]))])
+                                   (m/SizedBox .height 16)
+                                   (f/widget
+                                    m/Expanded
+                                    (poi->attributes-listview poi))])))))

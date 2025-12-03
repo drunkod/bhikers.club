@@ -1,0 +1,68 @@
+(ns club.bhikers.screens.aroundme.layers
+  (:require ["package:flutter/material.dart" :as m]
+            ["package:flutter_map/flutter_map.dart" :as fmap]
+            ["package:flutter_map_location_marker/flutter_map_location_marker.dart" :as maploc]
+            ["package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart"
+             :refer [MarkerClusterLayerWidget MarkerClusterLayerOptions]]
+            [club.bhikers.lib.pois :refer [dynamic-map-pois
+                                           poi->LatLng
+                                           poi->map-location-marker]]
+            [club.bhikers.screens.aroundme.ui :as ui]
+            [cljd.flutter :as f]))
+
+;; =============================================================================
+;; POI Markers Layer
+;; =============================================================================
+
+(defn pois-markers-widget []
+  (f/widget
+   :context ctx :get [:map-state :overpass-api]
+   :watch [pois (dynamic-map-pois map-state overpass-api)]
+   (MarkerClusterLayerWidget
+    .options
+    (MarkerClusterLayerOptions
+     .maxClusterRadius 100
+     .size (m/Size 40 40)
+     .alignment m/Alignment.center
+     .padding (m/EdgeInsets.all 50)
+     .centerMarkerOnClick false
+     .maxZoom 15
+     .builder (fn [_ markers]
+                (f/widget
+                 (m/Container
+                  .decoration (m/BoxDecoration .borderRadius (m/BorderRadius.circular 20)
+                                               .color m/Colors.blue))
+                 (m/Center .child
+                           (m/Text (str (count markers))
+                                   .style (m/TextStyle .color m/Colors.white)))))
+     .markers (map #(fmap/Marker .point (poi->LatLng %)
+                                 .height 40
+                                 .width 40
+                                 .child (m/GestureDetector
+                                         .onTap (fn [] (ui/show-poi-info ctx %))
+                                         .child (poi->map-location-marker %)))
+                   pois)))))
+
+;; =============================================================================
+;; Current Center Marker
+;; =============================================================================
+
+(defn current-center-marker [current-pos-as-center? current-center]
+  (if (and current-center (not current-pos-as-center?))
+    (let [[lat lon] current-center]
+      (maploc/AnimatedLocationMarkerLayer
+       .position (maploc/LocationMarkerPosition .latitude lat .longitude lon .accuracy 0)))
+    (m/Container)))
+
+;; =============================================================================
+;; Location Marker Style
+;; =============================================================================
+
+(defn current-location-marker-style [current-pos-as-center? theme]
+  (maploc/LocationMarkerStyle
+   .showAccuracyCircle false
+   .showHeadingSector false
+   .marker (maploc/DefaultLocationMarker
+            .color (if current-pos-as-center?
+                     (-> ^m/ThemeData theme .-colorScheme .-primary)
+                     (-> ^m/ThemeData theme .-colorScheme .-secondary)))))
