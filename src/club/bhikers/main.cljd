@@ -3,6 +3,8 @@
   (:require ["package:flutter/material.dart" :as m]
             ["package:easy_localization/easy_localization.dart" :as l10n]
             ["package:easy_localization_loader/easy_localization_loader.dart" :as l10nassets]
+            ["package:flutter_eval/flutter_eval.dart" :as fe]
+            ["package:flutter_eval/widgets.dart" :as few]
             [club.bhikers.screens.aroundme :refer [around-me-screen]]
             [club.bhikers.screens.settings :refer [settings-screen]]
             [club.bhikers.screens.enhancegpx :refer [enhance-gpx-screen]]
@@ -36,6 +38,10 @@
 ;; run MaterialApp with default screen "Around Me"
 (defn BhikersClubApp [initialRoute]
   (f/widget
+   (fe/HotSwapLoader
+    .uri "asset://assets/hot_update.evc"
+    .strategy fe/HotSwapStrategy.immediate
+    .loading (m/Center .child (m/CircularProgressIndicator)))
    (l10n/EasyLocalization
     .supportedLocales (map #(m/Locale %) supported-locales)
     .fallbackLocale (m/Locale default-locale)
