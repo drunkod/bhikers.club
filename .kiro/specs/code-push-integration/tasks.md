@@ -19,11 +19,11 @@
     - Add placeholder override functions for each HotSwap ID
     - _Requirements: 4.4_
 
-- [ ] 3. Integrate HotSwapLoader in main app
-  - [ ] 3.1 Add flutter_eval imports to main.cljd
+- [x] 3. Integrate HotSwapLoader in main app
+  - [x] 3.1 Add flutter_eval imports to main.cljd
     - Import flutter_eval.dart and widgets.dart packages
     - _Requirements: 2.1_
-  - [ ] 3.2 Wrap BhikersClubApp with HotSwapLoader
+  - [x] 3.2 Wrap BhikersClubApp with HotSwapLoader
     - Add HotSwapLoader as outermost widget
     - Configure URI to load from assets initially
     - Set appropriate strategy (immediate for dev)
