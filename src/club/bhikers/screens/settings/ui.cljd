@@ -162,4 +162,4 @@
      .leading (m/Icon m/Icons.bug_report)
      .settingKey "/advanced/debug-mode?"
      .title (l10n-str "settings.debug_mode")
-     .onChange #(reset! force-debug-mode? %))]))))
+     .onChange #(reset! force-debug-mode? %))]))
