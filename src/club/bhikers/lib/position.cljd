@@ -42,7 +42,7 @@
 
 (defn force-current-position []
   (await (-> geo/Geolocator (.getCurrentPosition
-                             .locationSettings (force-refresh-location-settings)))));)
+                             .locationSettings (force-refresh-location-settings)))))
 
 (defn new-position-stream-controller ^#/(async/StreamController geo/Position?) []
   (let [cancel-functions (atom [])
