@@ -12,8 +12,8 @@ vector-tile-styles
 selected-tile-server
 tile-layer-type]]
 [club.bhikers.lib.pois :refer [dynamic-map-pois
-poi->LatLng
-poi->map-location-marker]]
+poi->LatLng]]
+[club.bhikers.lib.pois.ui :refer [poi->map-location-marker]]
 [club.bhikers.screens.aroundme.ui :as ui]
 [cljd.flutter :as f]))
 

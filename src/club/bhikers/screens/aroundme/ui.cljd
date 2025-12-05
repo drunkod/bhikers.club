@@ -1,10 +1,10 @@
 (ns club.bhikers.screens.aroundme.ui
   (:require ["package:flutter/material.dart" :as m]
             [club.bhikers.lib.app :refer [supported-poi-types max-pois-radius]]
-            [club.bhikers.lib.pois :refer [edit-poi
-                                           route-to-poi
-                                           poi->title-widget
-                                           poi->attributes-listview]]
+            [club.bhikers.lib.pois.ui :refer [edit-poi
+                                   route-to-poi
+                                   poi->title-widget
+                                   poi->attributes-listview]]
             [club.bhikers.lib.logging :as logging]
             [club.bhikers.lib.utils :refer [l10n-str]]
             [cljd.flutter :as f]))

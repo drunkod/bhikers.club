@@ -1,0 +1,144 @@
+(ns club.bhikers.lib.pois.ui
+  (:require
+   [clojure.string :refer [replace]]
+   ["package:flutter/material.dart" :as m]
+   ["package:url_launcher/url_launcher.dart" :refer [canLaunchUrl launchUrl LaunchMode]]
+   ["package:maps_launcher/maps_launcher.dart" :refer [MapsLauncher]]
+   ["package:vector_graphics/vector_graphics.dart" :refer [AssetBytesLoader]]
+   ["package:flutter_svg/flutter_svg.dart" :refer [SvgPicture]]
+   ["package:url_launcher/link.dart" :as link]
+   [cljd.flutter :as f]
+   [club.bhikers.lib.utils :refer [l10n-str]]
+   [club.bhikers.lib.logging :as logging]))
+
+;; =============================================================================
+;; Icons & Assets
+;; =============================================================================
+
+(defn osm-tag-icon [type name]
+  (SvgPicture (AssetBytesLoader (str "src/resources/icons/symbols/" type "/" name ".svg.vec"))))
+
+(defonce osm-tags->icons
+  {"service:bicycle:repair=yes" (osm-tag-icon "amenity" "bicycle_repair_station")
+   "service:bicycle:retail=yes" (osm-tag-icon "shop" "bicycle")
+   "amenity=bicycle_repair_station" (osm-tag-icon "amenity" "bicycle_repair_station")
+   "amenity=cafe" (osm-tag-icon "amenity" "cafe")
+   "amenity=drinking_water" (osm-tag-icon "amenity" "drinking_water")
+   "amenity=fast_food" (osm-tag-icon "amenity" "fast_food")
+   "amenity=restaurant" (osm-tag-icon "amenity" "restaurant")
+   "amenity=shelter" (osm-tag-icon "amenity" "shelter")
+   "amenity=toilets" (osm-tag-icon "amenity" "toilets")
+   "bottle=yes" (osm-tag-icon "amenity" "drinking_water")
+   "building=hotel" (osm-tag-icon "tourism" "hotel")
+   "building=toilets" (osm-tag-icon "amenity" "toilets")
+   "cuisine=sandwich" (osm-tag-icon "amenity" "fast_food")
+   "drinking_water=yes"  (osm-tag-icon "amenity" "drinking_water")
+   "fountain=bottle_refill"  (osm-tag-icon "amenity" "fountain")
+   "fountain=drinking"  (osm-tag-icon "amenity" "fountain")
+   "shelter=yes" (osm-tag-icon "amenity" "shelter")
+   "shelter_type=picnic_shelter" (osm-tag-icon "amenity" "shelter")
+   "shelter_type=weather_shelter" (osm-tag-icon "amenity" "shelter")
+   "shop=bakery" (osm-tag-icon "shop" "bakery")
+   "shop=bicycle" (osm-tag-icon "shop" "bicycle")
+   "shop=pastry" (osm-tag-icon "shop" "bakery")
+   "toilets=yes" (osm-tag-icon "amenity" "toilets")
+   "tourism=alpine_hut"  (osm-tag-icon "tourism" "alpinehut")
+   "tourism=camp_site" (osm-tag-icon "tourism" "camp_site")
+   "tourism=caravan_site" (osm-tag-icon "tourism" "camp_site")
+   "tourism=guest_house" (osm-tag-icon "tourism" "guest_house")
+   "tourism=hostel" (osm-tag-icon "tourism" "hostel")
+   "tourism=hotel" (osm-tag-icon "tourism" "hotel")
+   "tourism=motel" (osm-tag-icon "tourism" "motel")
+   "tourism=picnic_site" (osm-tag-icon "tourism" "picnic_site")
+   "tourism=wilderness_hut" (osm-tag-icon "tourism" "wilderness_hut")})
+
+(defn osm-tag->icon [[type value]]
+  (get osm-tags->icons (str type "=" value)))
+
+(defn poi->map-location-marker [poi]
+  (let [osm-tags-icons (filter some? (map osm-tag->icon (get poi "tags")))]
+    ;; theres always at least one matching icon for poi tags. otherwise its a bug.
+    (first osm-tags-icons)))
+
+;; =============================================================================
+;; Actions
+;; =============================================================================
+
+(defn route-to-poi [poi]
+  (-> MapsLauncher (.launchCoordinates (get poi "lat") (get poi "lon"))))
+
+(defn edit-poi [poi]
+  (let [geoedit-uri (Uri.parse (str "geo:" (get poi "lat") "," (get poi "lon")))]
+    (if (await (canLaunchUrl (Uri.parse "everydoor://")))
+      (await (launchUrl geoedit-uri))
+      (await (launchUrl (Uri.parse "https://every-door.app/")
+                        .mode LaunchMode.externalApplication)))))
+
+;; =============================================================================
+;; POI Details Widgets
+;; =============================================================================
+
+(defonce priority-list ["name" "phone" "contact:phone" "website" "email"])
+
+(defn basic-converter [scheme icon]
+  (fn [value]
+    (f/widget
+     (link/Link .uri (Uri.parse (str scheme value))
+                .target link/LinkTarget.blank
+                .builder (f/build [open-link]
+                                  (f/widget
+                                   (m/TextButton.icon .onPressed open-link
+                                                      .label (m/Text value .overflow m/TextOverflow.fade .softWrap true .maxLines 2)
+                                                      .icon (m/Icon icon))))))))
+
+(defonce phone-converter (basic-converter "tel://" m/Icons.call))
+(defonce email-converter (basic-converter "mailto://" m/Icons.email))
+(defonce website-converter (basic-converter "" m/Icons.open_in_browser))
+
+(defonce converters {"phone" phone-converter
+                     "mobile" phone-converter
+                     "contact:phone" phone-converter
+                     "contact:mobile" phone-converter
+                     "contact:email" email-converter
+                     "contact:website" website-converter
+                     "contact:facebook" website-converter
+                     "contact:instagram" website-converter
+                     "email" email-converter
+                     "website" website-converter})
+
+(defn osm-tag-value->widget [type value]
+  (if-let [converter (get converters type)]
+    (converter value) ;; Apply conversion if a function exists
+    (m/Text value .overflow m/TextOverflow.ellipsis .softWrap true .maxLines 2)))
+
+(defn osm-tag-key->widget [type]
+  (m/Text (replace type #"[:_]" " ")
+          .style (m/TextStyle .fontWeight m/FontWeight.bold)
+          .overflow  m/TextOverflow.fade .softWrap true .maxLines 2))
+
+(defn prioritized-attrs [tags]
+  (let [widgets (into {} tags)
+        prioritized-widgets (filter some? (map (fn [key] (when-let [value (get widgets key)] [key value]))
+                                               priority-list))
+        other-widgets (into {} (filter #(not ((set priority-list) (key %))) widgets))]
+    (concat prioritized-widgets other-widgets)))
+
+(defn poi->attributes-listview [poi]
+  (m/ListView
+   .children (map (fn [[type value]]
+                    (m/Row .mainAxisAlignment m/MainAxisAlignment.start
+                           .children [(f/widget (m/Expanded .flex 3) (osm-tag-key->widget type))
+                                      (f/widget (m/Expanded .flex 5) (osm-tag-value->widget type value))
+                                      (or (osm-tag->icon [type value]) (m/Container))]))
+                  (prioritized-attrs (get poi "tags" {})))))
+
+(defn poi->title-widget [poi]
+  (let [poi-name (get-in poi ["tags"  "name"] (l10n-str "common.no_name"))
+        osm-tags-icons (filter some? (map osm-tag->icon (get poi "tags")))]
+    (f/widget
+     (m/Expanded .flex 2)
+     (m/Row .children (concat
+                       osm-tags-icons
+                       [(m/Text poi-name
+                                .overflow m/TextOverflow.fade
+                                .style (m/TextStyle .fontSize 16 .fontWeight m/FontWeight.bold))])))))
