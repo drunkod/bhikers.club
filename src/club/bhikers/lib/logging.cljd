@@ -42,6 +42,6 @@
                                  file-output)
                        .printer (SimplePrinter .colors true .printTime true))]
        (d (str "swap logging system (see file in " (.-path log-dir) ")"))
-       (swap! logger (constantly new-logger))))))
+       (reset! logger new-logger))))))
 
-(defn close! [] (await (.close ^Logger @logger)))
+(defn dispose! [] (await (.close ^Logger @logger)))

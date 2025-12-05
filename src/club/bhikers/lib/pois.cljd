@@ -100,20 +100,20 @@
                        (reset! pois [])
                        (doseq [t ["node" "way"]
                                tags (partition-all 2 osm-tags)]
-                         (swap! query-reporter (constantly (str "fetch:" t tags)))
+                         (reset! query-reporter (str "fetch:" t tags))
                          (let [all-items (await (oapi/query overpass-api t lat lon tags radius))
                                typed-items (filter #(= t (get % "type")) all-items)
                                _pois (map #(overpass-item->poi % all-items selected-poi-type)
                                           typed-items)]
                            (cond
                              (= _pois nil)
-                             (swap! query-reporter (constantly (str "FAILED! " t tags)))
+                             (reset! query-reporter (str "FAILED! " t tags))
                              (= (count _pois) 0)
                              (logging/d "no pois fetched! map-state was: " new-state)
                              :else
                              (do (logging/d "adding " (count _pois) " pois fetched!")
                                  (reset! pois (into @pois _pois))))))
-                       (swap! query-reporter (constantly (str "fetched " (count @pois) " pois."))))))))
+                       (reset! query-reporter (str "fetched " (count @pois) " pois."))))))))
 
     pois))
 

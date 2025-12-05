@@ -20,8 +20,8 @@
                               current-version (get new-info :build-name)]
                           (logging/d "last release: " tag-name ", current: " current-version)
                           (when (not= tag-name (str "v" current-version))
-                            (swap! new-version-url (constantly browser-dl-url))
-                            (swap! new-version (constantly tag-name))
+                            (reset! new-version-url browser-dl-url)
+                            (reset! new-version tag-name)
                             (logging/d "NEW VERSION! " @new-version ": " @new-version-url)))))))]
     (add-watch app-info :check-for-update refresh!)
     (refresh! nil nil nil @app-info)))

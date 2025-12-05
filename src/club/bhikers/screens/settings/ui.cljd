@@ -37,7 +37,7 @@
      .defaultValue 1000
      .min min-pois-radius
      .max max-pois-radius
-     .onChange #(swap! pois-radius (constantly %))
+     .onChange #(reset! pois-radius %)
      .step 500)
     (#/(settings/DropDownSettingsTile String)
      .leading (m/Icon m/Icons.location_searching)
@@ -46,7 +46,7 @@
      .values (into {} (map (fn [poi] [poi (l10n-str (str "around_me.pois." poi))])
                            supported-poi-types))
      .selected @selected-poi-type
-     .onChange #(swap! selected-poi-type (constantly %)))
+     .onChange #(reset! selected-poi-type %))
     (#/(settings/DropDownSettingsTile String)
      .leading (m/Icon m/Icons.language)
      .settingKey "/general/language"
@@ -79,10 +79,10 @@
                "vector" (l10n-str "settings.tile_layer_vector")}
       .selected (name layer-type)
       .onChange #(let [new-type (keyword %)]
-                   (swap! tile-layer-type (constantly new-type))
+                   (reset! tile-layer-type new-type)
                    ;; Reset server selection to default of new type to avoid invalid state
                    (let [new-default (if (= new-type :raster) "osm" "protomaps")]
-                     (swap! selected-tile-server (constantly new-default)))))
+                     (reset! selected-tile-server new-default)))))
 
      ;; Tile Server Selector
      (let [is-raster (= layer-type :raster)
@@ -99,7 +99,7 @@
         .title (l10n-str "settings.tile_server")
         .values (into {} (map (fn [[id {:keys [name]}]] [id name]) options))
         .selected current-val
-        .onChange #(swap! selected-tile-server (constantly %))))])))
+        .onChange #(reset! selected-tile-server %))))])))
 
 ;; =============================================================================
 ;; Location Settings
@@ -114,7 +114,7 @@
      .title (l10n-str "settings.location_distance_filter")
      .keyboardType m/TextInputType.number
      .onChange #(let [distance (str->int % 0 10000)]
-                  (when distance (swap! refresh-location-distance-filter (constantly distance))))
+                  (when distance (reset! refresh-location-distance-filter distance)))
      .validator #(when (not (str->int % 0 10000))
                    (l10n-str "settings.distance_filter_input_validation_error"))
      .initialValue (str @refresh-location-distance-filter))
@@ -126,7 +126,7 @@
               "medium" (l10n-str "settings.location_accuracy_medium")
               "high" (l10n-str "settings.location_accuracy_high")}
      .selected (location-accuracy->str @refresh-location-accuracy)
-     .onChange #(swap! refresh-location-accuracy (constantly (str->location-accuracy %))))
+     .onChange #(reset! refresh-location-accuracy (str->location-accuracy %)))
     (#/(settings/DropDownSettingsTile int)
      .leading (m/Icon m/Icons.location_searching)
      .settingKey "/advanced-location/refresh-location-interval-duration"
@@ -139,8 +139,7 @@
               (* 30 60) "30m"
               (* 60 60) "1h"}
      .selected (.-inSeconds ^Duration @refresh-location-interval-duration)
-     .onChange #(swap! refresh-location-interval-duration (constantly
-                                                           (Duration .seconds %))))]))
+     .onChange #(reset! refresh-location-interval-duration (Duration .seconds %))))]))
 
 ;; =============================================================================
 ;; Advanced Settings
@@ -155,7 +154,7 @@
      .title (l10n-str "settings.api_query_timeout")
      .keyboardType m/TextInputType.number
      .onChange #(let [timeout (str->int % 2 10)]
-                  (when timeout (swap! api-query-timeout (constantly timeout))))
+                  (when timeout (reset! api-query-timeout timeout)))
      .validator #(when (not (str->int % 2 10))
                    (l10n-str "settings.timeout_input_validation_error"))
      .initialValue (str @api-query-timeout))
@@ -163,4 +162,4 @@
      .leading (m/Icon m/Icons.bug_report)
      .settingKey "/advanced/debug-mode?"
      .title (l10n-str "settings.debug_mode")
-     .onChange #(swap! force-debug-mode? (constantly %)))]))
+     .onChange #(reset! force-debug-mode? %))]))))

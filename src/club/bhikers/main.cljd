@@ -70,4 +70,4 @@
   (check-for-update!)
   (logging/d "starting app")
   (f/run (BhikersClubApp "/around-me"))
-  (await logging/close!))
+  (await logging/dispose!))
