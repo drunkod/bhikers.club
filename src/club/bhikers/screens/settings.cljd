@@ -1,7 +1,8 @@
 (ns club.bhikers.screens.settings
 (:require ["package:flutter/material.dart" :as m]
 ["package:flutter_settings_screens/flutter_settings_screens.dart" :as settings]
-[club.bhikers.screens.common :refer [app-bar drawer]]
+[club.bhikers.screens.common.appbar :refer [app-bar]]
+[club.bhikers.screens.common.drawer :refer [drawer]]
 [club.bhikers.lib.utils :refer [l10n-str]]
 ;; Imported Modules
 [club.bhikers.screens.settings.ui :as ui]

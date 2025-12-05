@@ -1,11 +1,7 @@
-(ns club.bhikers.screens.common
+(ns club.bhikers.screens.common.drawer
   (:require ["package:flutter/material.dart" :as m]
             ["package:url_launcher/link.dart" :as link]
             [club.bhikers.lib.utils :refer [l10n-str]]
-            [club.bhikers.lib.logging :as logging]
-            [club.bhikers.lib.notifications
-             :refer [dismiss-notif dismiss-all-notifs]]
-            [club.bhikers.screens.debuglog :refer [debuglog-screen]]
             [club.bhikers.lib.app :refer [feat-enhance-gpx?
                                           feat-fall-detector?
                                           app-info
@@ -13,7 +9,10 @@
                                           new-version-url]]
             [cljd.flutter :as f]))
 
-;; Setup main drawer with app routes
+;; =============================================================================
+;; Main Navigation Drawer
+;; =============================================================================
+
 (defn drawer []
   (f/widget
    :get [m/Navigator
@@ -75,75 +74,3 @@
                                                 (m/TextButton.icon .onPressed open-link
                                                                    .label (m/Text *new-version-url .overflow m/TextOverflow.fade .softWrap true .maxLines 1)
                                                                    .icon (m/Icon m/Icons.system_update)))))])))))
-
-
-
-(defn notifications-list-widget []
-  (f/widget
-   :get [:notifications]
-   :watch [*notifs notifications]
-   (m/ListView
-    .padding (m/EdgeInsets.all 2.0)
-    .children
-    (into [(m/ListTile
-            .leading (m/Icon m/Icons.notification_important)
-            .title (m/Text (l10n-str "notifications.title"))
-            .trailing (m/IconButton
-                       .icon (m/Icon m/Icons.delete_sweep)
-                       .tooltip (l10n-str "notifications.dismiss_all")
-                       .onPressed #(dismiss-all-notifs)))]
-          (map
-           (fn [[id txt]] (m/Dismissible
-                           .key (m/ValueKey id)
-                           .onDismissed (fn [_] (dismiss-notif id))
-                           .child (m/ListTile .title (m/Text txt))))
-           *notifs)))))
-
-(defn notifications-button []
-  (f/widget
-   :context ctx
-   :get [:notifications]
-   :watch [*notifs notifications]
-   (m/Stack .children
-            (let [nb-notifs (count *notifs)]
-              (if (> 1 nb-notifs)
-                []
-                [(m/IconButton .icon (m/Icon m/Icons.notification_important)
-                               .tooltip "important"
-                               .onPressed (fn []
-                                            (m/showModalBottomSheet
-                                             .context ctx
-                                             .builder (f/build
-                                                       (f/widget
-                                                        (m/Container .height 300)
-                                                        (notifications-list-widget))))
-                                            nil))
-                 (f/widget
-                  (m/Positioned .right 12 .top 12)
-                  (m/Container  .padding (m/EdgeInsets.all 5)
-                                .decoration (m/BoxDecoration
-                                             .shape m/BoxShape.circle
-                                             .color m/Colors.red)
-                                .constraints (m/BoxConstraints
-                                              .minWidth 5
-                                              .minHeight 5)))])))))
-
-(defn debuglog-screen-button []
-  (f/widget :get [m/Navigator]
-            (m/IconButton .icon (m/Icon m/Icons.article)
-                          .tooltip "logs"
-                          .onPressed (fn []
-                                       (.push navigator
-                                              (m/MaterialPageRoute
-                                               .builder (f/build [] (debuglog-screen))))
-                                       nil))))
-
-(defn app-bar [& {:keys [title
-                         additional-actions]
-                  :or {title "app.title"
-                       additional-actions []}}]
-  (m/AppBar .title (m/Text (l10n-str title))
-            .actions (concat
-                      [(debuglog-screen-button)
-                       (notifications-button)]
-                      additional-actions)))

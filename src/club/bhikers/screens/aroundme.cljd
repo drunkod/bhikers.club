@@ -8,7 +8,8 @@
 vertouplage
 debug-mode?]]
 [club.bhikers.lib.map :as map]
-[club.bhikers.screens.common :refer [app-bar drawer]]
+[club.bhikers.screens.common.appbar :refer [app-bar]]
+[club.bhikers.screens.common.drawer :refer [drawer]]
 ;; Imported Modules
 [club.bhikers.screens.aroundme.ui :as ui]
 [club.bhikers.screens.aroundme.layers :as layers]
