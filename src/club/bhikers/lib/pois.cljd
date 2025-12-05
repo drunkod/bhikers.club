@@ -1,6 +1,6 @@
 (ns club.bhikers.lib.pois
   (:require
-   ["package:latlong2/latlong.dart" :refer [LatLng]
+   ["package:latlong2/latlong.dart" :refer [LatLng]]
    [club.bhikers.lib.logging :as logging]
    [club.bhikers.lib.overpassapi :as oapi]))
 
