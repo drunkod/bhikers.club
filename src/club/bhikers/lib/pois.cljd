@@ -113,8 +113,8 @@
                              :else
                              (do (logging/d "adding " (count _pois) " pois fetched!")
                                  (reset! pois (into @pois _pois))))))
-                       (reset! query-reporter (str "fetched " (count @pois) " pois."))))))))
+                       (reset! query-reporter (str "fetched " (count @pois) " pois.")))))))
 
-    pois)
+    pois))
 
 (defn poi->LatLng [poi] (LatLng (get poi "lat") (get poi "lon")))
