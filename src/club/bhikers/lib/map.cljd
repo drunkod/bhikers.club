@@ -5,7 +5,7 @@
             ["package:flutter_map_location_marker/flutter_map_location_marker.dart" :as maploc]
             ["dart:async" :as async]
             [club.bhikers.lib.notifications :refer [debug-notif]]
-            [club.bhikers.lib.app :refer [debug-mode? selected-poi-type pois-radius]]
+            [club.bhikers.lib.config :refer [debug-mode? selected-poi-type pois-radius]]
             [club.bhikers.lib.utils :refer [l10n-str]]
             [club.bhikers.lib.logging :as logging]
             [club.bhikers.lib.position

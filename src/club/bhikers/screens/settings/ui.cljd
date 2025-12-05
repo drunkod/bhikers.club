@@ -6,7 +6,7 @@
                                             str->int
                                             str->location-accuracy
                                             location-accuracy->str]]
-            [club.bhikers.lib.app :refer [supported-poi-types selected-poi-type
+            [club.bhikers.lib.config :refer [supported-poi-types selected-poi-type
                                           supported-locales default-locale
                                           force-debug-mode?
                                           max-pois-radius

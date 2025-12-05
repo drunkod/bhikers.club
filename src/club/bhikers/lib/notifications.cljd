@@ -1,6 +1,6 @@
 (ns club.bhikers.lib.notifications
   (:require
-   [club.bhikers.lib.app :refer [debug-mode?]]
+   [club.bhikers.lib.config :refer [debug-mode?]]
    [club.bhikers.lib.logging :as logging]
    [club.bhikers.lib.utils :refer [uuid-v4]]))
 

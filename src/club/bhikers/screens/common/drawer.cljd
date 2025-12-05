@@ -2,7 +2,7 @@
   (:require ["package:flutter/material.dart" :as m]
             ["package:url_launcher/link.dart" :as link]
             [club.bhikers.lib.utils :refer [l10n-str]]
-            [club.bhikers.lib.app :refer [feat-enhance-gpx?
+            [club.bhikers.lib.config :refer [feat-enhance-gpx?
                                           feat-fall-detector?
                                           app-info
                                           new-version

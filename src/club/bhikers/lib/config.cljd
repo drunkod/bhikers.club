@@ -1,0 +1,74 @@
+(ns club.bhikers.lib.config
+  (:require ["package:latlong2/latlong.dart" :as ll]
+            ["package:geolocator/geolocator.dart" :as geo]
+            ["package:flutter/foundation.dart" :refer [kDebugMode]]))
+
+;; =============================================================================
+;; CONSTANTS & DEFAULTS
+;; =============================================================================
+
+(defonce default-latest-release-api "https://api.github.com/repos/parasitid/bhikers.club/releases/latest")
+(defonce supported-locales ["en" "fr" "it" "es" "de" "ru"])
+(defonce default-locale "en")
+(defonce max-pois-radius 10000) ;; 20km
+(defonce min-pois-radius 500)   ;; 500m
+
+(defonce supported-poi-types ["shelter"
+                              "hotel"
+                              "campsite"
+                              "restaurant"
+                              "sandwich"
+                              "bikeshop"
+                              "bottlerefill"
+                              "toilet"])
+
+(defonce default-poi-type "sandwich")
+
+;; =============================================================================
+;; MAP CONFIGURATION
+;; =============================================================================
+
+(defonce raster-tile-servers
+  {"osm" {:name "OpenStreetMap"
+          :url "https://tile.openstreetmap.org/{z}/{x}/{y}.png"}
+   "otm" {:name "OpenTopoMap"
+          :url "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"}
+   "cyclosm" {:name "CyclOSM"
+              :url "https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png"}})
+
+(defonce vector-tile-styles
+  {"protomaps" {:name "MapLibre (Protomaps)"
+                :url "https://api.protomaps.com/styles/v2/light.json?key=48c711a2fc69c6f0"}})
+
+(defonce icicommencelaventure (ll/LatLng 48.51479 2.65053))
+(defonce vertouplage (ll/LatLng 47.1612 -1.4778))
+
+;; =============================================================================
+;; APP STATE ATOMS
+;; =============================================================================
+
+(defonce selected-poi-type (atom default-poi-type))
+(defonce selected-tile-server (atom "osm"))
+(defonce tile-layer-type (atom :raster))
+
+(defonce api-query-timeout (atom 3))
+(defonce pois-radius (atom 1000))
+
+(defonce feat-fall-detector? false)
+(defonce feat-enhance-gpx? false)
+
+(defonce new-version-url (atom nil))
+(defonce new-version (atom nil))
+
+(defonce refresh-location-distance-filter (atom 500))
+(defonce refresh-location-interval-duration (atom (Duration .seconds 30)))
+(defonce refresh-location-accuracy (atom geo/LocationAccuracy.low))
+
+(defonce force-debug-mode? (atom false))
+(defonce app-info (atom nil))
+
+;; =============================================================================
+;; LOGIC HELPERS
+;; =============================================================================
+
+(defn debug-mode? [] (or @force-debug-mode? kDebugMode))

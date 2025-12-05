@@ -4,9 +4,13 @@
    ["package:dio/dio.dart" :as dio]
    ["package:dio_cache_interceptor/dio_cache_interceptor.dart" :as cache]
    ["package:geolocator/geolocator.dart" :as geo]
-   ["package:easy_localization/easy_localization.dart" :as l10n]))
+   ["package:easy_localization/easy_localization.dart" :as l10n]
+   ["package:path_provider/path_provider.dart" :refer [getApplicationDocumentsDirectory]]
+   ["dart:io" :refer [Directory]]))
 
 (defn l10n-str [& args] (apply str (map l10n/tr args)))
+
+(defn ^#/(Future Directory) log-file-dir [] (await (getApplicationDocumentsDirectory)))
 
 ;; Setup dio instance with cache+log interceptors for overpass-api.de
 ;; dio is a lib for http requests

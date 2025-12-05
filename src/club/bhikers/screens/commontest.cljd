@@ -4,6 +4,7 @@
              [club.bhikers.main :refer [BhikersClubApp]]
              [club.bhikers.lib.utils :refer [l10n-str]]
              [club.bhikers.lib.app :as app]
+             [club.bhikers.lib.config :as config]
              [club.bhikers.lib.logging :as logging]
              [cljd.test :as t :refer [deftest is]]))
 
@@ -23,4 +24,4 @@
           _ (await (pumpAndSettle))
           _ (await (tap (ft/find.byType m/AboutListTile)))
           _ (await (pumpAndSettle))]
-      (ft/expect (ft/find.text (get @app/app-info :app-name)) ft/findsOneWidget))))
+      (ft/expect (ft/find.text (get @config/app-info :app-name)) ft/findsOneWidget))))

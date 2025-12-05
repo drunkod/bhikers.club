@@ -1,6 +1,6 @@
 (ns club.bhikers.screens.aroundme.ui
   (:require ["package:flutter/material.dart" :as m]
-            [club.bhikers.lib.app :refer [supported-poi-types max-pois-radius]]
+            [club.bhikers.lib.config :refer [supported-poi-types max-pois-radius]]
             [club.bhikers.lib.pois.ui :refer [edit-poi
                                    route-to-poi
                                    poi->title-widget

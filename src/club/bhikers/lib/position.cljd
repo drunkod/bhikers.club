@@ -5,7 +5,7 @@
    ["dart:io" :as io]
    ["package:geolocator/geolocator.dart" :as geo]
    ["package:flutter_map_location_marker/flutter_map_location_marker.dart" :as maploc]
-   [club.bhikers.lib.app :refer [refresh-location-distance-filter
+   [club.bhikers.lib.config :refer [refresh-location-distance-filter
                                  refresh-location-interval-duration
                                  refresh-location-accuracy]]
    [club.bhikers.lib.logging :as logging]))

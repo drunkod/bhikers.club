@@ -7,7 +7,7 @@
 ["package:flutter_map_location_marker/flutter_map_location_marker.dart" :as maploc]
 ["package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart"
 :refer [MarkerClusterLayerWidget MarkerClusterLayerOptions]]
-[club.bhikers.lib.app :refer [raster-tile-servers
+[club.bhikers.lib.config :refer [raster-tile-servers
 vector-tile-styles
 selected-tile-server
 tile-layer-type]]

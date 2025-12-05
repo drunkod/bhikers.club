@@ -4,7 +4,7 @@
 ["package:latlong2/latlong.dart" :refer [LatLng]]
 ["package:flutter_map_location_marker/flutter_map_location_marker.dart" :as maploc]
 ["package:flutter_map_compass/flutter_map_compass.dart" :refer [MapCompass]]
-[club.bhikers.lib.app :refer [icicommencelaventure
+[club.bhikers.lib.config :refer [icicommencelaventure
 vertouplage
 debug-mode?]]
 [club.bhikers.lib.map :as map]
