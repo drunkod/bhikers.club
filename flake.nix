@@ -26,6 +26,8 @@
             self.overlay
           ];
         };
+        # Create the shell once, reuse for both outputs
+        shell = import ./devshell.nix { inherit pkgs; };        
       in
       {
         android-sdk.enable = true;
@@ -57,6 +59,9 @@
             # system-images-android-34-google-apis-x86-64
             # system-images-android-34-google-apis-playstore-x86-64
           ]);
+          # Export devshell as a package for `nix shell`
+          default = shell;
+
         } // lib.optionalAttrs (system == "x86_64-linux") {
           # Android Studio in nixpkgs is currently packaged for x86_64-linux only.
           android-studio = pkgs.androidStudioPackages.stable;
@@ -65,7 +70,8 @@
           # android-studio = pkgs.androidStudioPackage.canary;
         };
 
-        devShell = import ./devshell.nix { inherit pkgs; };
+        # Use newer devShells format
+        devShells.default = shell;        
       }
     );
 }

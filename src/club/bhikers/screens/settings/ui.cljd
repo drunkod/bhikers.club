@@ -82,7 +82,7 @@
                    (reset! tile-layer-type new-type)
                    ;; Reset server selection to default of new type to avoid invalid state
                    (let [new-default (if (= new-type :raster) "osm" "protomaps")]
-                     (reset! selected-tile-server new-default)))))
+                     (reset! selected-tile-server new-default))))
 
      ;; Tile Server Selector
      (let [is-raster (= layer-type :raster)
@@ -99,7 +99,7 @@
         .title (l10n-str "settings.tile_server")
         .values (into {} (map (fn [[id {:keys [name]}]] [id name]) options))
         .selected current-val
-        .onChange #(reset! selected-tile-server %))))])))
+        .onChange #(reset! selected-tile-server %)))])))
 
 ;; =============================================================================
 ;; Location Settings
@@ -139,7 +139,7 @@
               (* 30 60) "30m"
               (* 60 60) "1h"}
      .selected (.-inSeconds ^Duration @refresh-location-interval-duration)
-     .onChange #(reset! refresh-location-interval-duration (Duration .seconds %))))]))
+     .onChange #(reset! refresh-location-interval-duration (Duration .seconds %)))]))
 
 ;; =============================================================================
 ;; Advanced Settings
