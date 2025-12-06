@@ -59,6 +59,13 @@ apk-release: compile ## Build release APK
 		--release --no-pub --suppress-analytics \
 		--target-platform android-arm,android-arm64
 
+adb-install: apk ## Build debug APK and push to connected device
+	@command -v adb >/dev/null 2>&1 || { echo "Error: adb not found. Install Android SDK Platform Tools."; exit 1; }
+	@adb devices | grep -q "device$$" || { echo "Error: No Android device connected."; exit 1; }
+	@echo "Installing APK on device..."
+	adb install -r build/app/outputs/flutter-apk/app-debug.apk
+	@echo "✅ APK installed successfully!"
+
 clean: ## Clean ClojureDart code
 	clj -M:cljd clean
 
