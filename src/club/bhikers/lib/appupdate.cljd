@@ -4,9 +4,9 @@
    [club.bhikers.lib.utils :refer [l10n-str create-dio-instance]]
    [club.bhikers.lib.logging :as logging]
    [club.bhikers.lib.notifications :refer [new-notif]]
-   [club.bhikers.lib.config :refer [app-info
-                                 new-version
-                                 new-version-url]]))
+   [club.bhikers.lib.state :refer [app-info
+                                   new-version
+                                   new-version-url]]))
 
 (defn check-for-update! []
   (let [refresh! (fn [_ _ _ new-info]

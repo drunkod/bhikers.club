@@ -5,8 +5,8 @@
 ["package:flutter_map_location_marker/flutter_map_location_marker.dart" :as maploc]
 ["package:flutter_map_compass/flutter_map_compass.dart" :refer [MapCompass]]
 [club.bhikers.lib.config :refer [icicommencelaventure
-vertouplage
-debug-mode?]]
+vertouplage]]
+[club.bhikers.lib.state :refer [debug-mode?]]
 [club.bhikers.lib.map :as map]
 [club.bhikers.screens.common.appbar :refer [app-bar]]
 [club.bhikers.screens.common.drawer :refer [drawer]]

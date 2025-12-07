@@ -7,7 +7,7 @@
     [Logger AdvancedFileOutput ConsoleOutput MultiOutput
      DateTimeFormat SimplePrinter Level]]
 
-   [club.bhikers.lib.config :refer [force-debug-mode? debug-mode?]]
+   [club.bhikers.lib.state :refer [force-debug-mode? debug-mode?]]
    [club.bhikers.lib.utils :refer [log-file-dir]]))
 
 (defonce logger (atom nil))

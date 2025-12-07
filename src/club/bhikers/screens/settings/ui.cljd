@@ -6,20 +6,21 @@
                                             str->int
                                             str->location-accuracy
                                             location-accuracy->str]]
-            [club.bhikers.lib.config :refer [supported-poi-types selected-poi-type
+            [club.bhikers.lib.state :refer [selected-poi-type
+                                            force-debug-mode?
+                                            pois-radius
+                                            api-query-timeout
+                                            refresh-location-distance-filter
+                                            refresh-location-interval-duration
+                                            refresh-location-accuracy
+                                            selected-tile-server
+                                            tile-layer-type]]
+            [club.bhikers.lib.config :refer [supported-poi-types
                                           supported-locales default-locale
-                                          force-debug-mode?
                                           max-pois-radius
                                           min-pois-radius
-                                          pois-radius
-                                          api-query-timeout
-                                          refresh-location-distance-filter
-                                          refresh-location-interval-duration
-                                          refresh-location-accuracy
                                           raster-tile-servers
-                                          vector-tile-styles
-                                          selected-tile-server
-                                          tile-layer-type]]
+                                          vector-tile-styles]]
             [cljd.flutter :as f]))
 
 ;; =============================================================================

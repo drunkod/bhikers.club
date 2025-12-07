@@ -1,0 +1,33 @@
+(ns club.bhikers.lib.state
+  "Runtime state atoms for the application."
+  (:require
+   ["package:flutter/foundation.dart" :refer [kDebugMode]]
+   ["package:geolocator/geolocator.dart" :as geo]
+   [club.bhikers.lib.config :as config]))
+
+;; =============================================================================
+;; APP STATE ATOMS
+;; =============================================================================
+
+(defonce selected-poi-type (atom config/default-poi-type))
+(defonce selected-tile-server (atom "osm"))
+(defonce tile-layer-type (atom :raster))
+
+(defonce api-query-timeout (atom 3))
+(defonce pois-radius (atom 1000))
+
+(defonce new-version-url (atom nil))
+(defonce new-version (atom nil))
+
+(defonce refresh-location-distance-filter (atom 500))
+(defonce refresh-location-interval-duration (atom (Duration .seconds 30)))
+(defonce refresh-location-accuracy (atom geo/LocationAccuracy.low))
+
+(defonce force-debug-mode? (atom false))
+(defonce app-info (atom nil))
+
+;; =============================================================================
+;; LOGIC HELPERS
+;; =============================================================================
+
+(defn debug-mode? [] (or @force-debug-mode? kDebugMode))

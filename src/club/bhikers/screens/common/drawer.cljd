@@ -3,10 +3,10 @@
             ["package:url_launcher/link.dart" :as link]
             [club.bhikers.lib.utils :refer [l10n-str]]
             [club.bhikers.lib.config :refer [feat-enhance-gpx?
-                                          feat-fall-detector?
-                                          app-info
-                                          new-version
-                                          new-version-url]]
+                                          feat-fall-detector?]]
+            [club.bhikers.lib.state :refer [app-info
+                                            new-version
+                                            new-version-url]]
             [cljd.flutter :as f]))
 
 ;; =============================================================================

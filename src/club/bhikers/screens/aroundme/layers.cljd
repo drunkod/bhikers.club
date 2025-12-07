@@ -8,8 +8,8 @@
 ["package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart"
 :refer [MarkerClusterLayerWidget MarkerClusterLayerOptions]]
 [club.bhikers.lib.config :refer [raster-tile-servers
-vector-tile-styles
-selected-tile-server
+vector-tile-styles]]
+[club.bhikers.lib.state :refer [selected-tile-server
 tile-layer-type]]
 [club.bhikers.lib.pois :refer [dynamic-map-pois
 poi->LatLng]]
