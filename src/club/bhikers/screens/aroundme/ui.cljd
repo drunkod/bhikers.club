@@ -6,7 +6,7 @@
                                    poi->title-widget
                                    poi->attributes-listview]]
             [club.bhikers.lib.logging :as logging]
-            [club.bhikers.lib.utils :refer [l10n-str]]
+            [club.bhikers.lib.i18n :refer [l10n-str]]
             [cljd.flutter :as f]))
 
 ;; =============================================================================

@@ -1,6 +1,6 @@
 (ns club.bhikers.screens.common.appbar
   (:require ["package:flutter/material.dart" :as m]
-            [club.bhikers.lib.utils :refer [l10n-str]]
+            [club.bhikers.lib.i18n :refer [l10n-str]]
             [club.bhikers.lib.notifications
              :refer [dismiss-notif dismiss-all-notifs notifications]]
             [club.bhikers.screens.debuglog :refer [debuglog-screen]]

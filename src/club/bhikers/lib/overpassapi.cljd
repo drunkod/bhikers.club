@@ -3,12 +3,10 @@
    [clojure.string :refer [replace]]
    ["package:dio/dio.dart" :as dio]
    ["package:dio_cache_interceptor/dio_cache_interceptor.dart" :as cache]
+   [club.bhikers.lib.http :refer [create-cache-store
+                                  create-dio-instance]]
    [club.bhikers.lib.notifications :refer [debug-notif]]
    [club.bhikers.lib.state :refer [api-query-timeout]]
-   [club.bhikers.lib.utils :refer [uuid-v5
-                                   create-cache-store
-                                   create-dio-instance]]
-
    [club.bhikers.lib.logging :as logging]))
 
 

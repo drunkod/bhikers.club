@@ -2,8 +2,8 @@
   (:require ["package:flutter/material.dart" :as m]
             ["package:flutter_settings_screens/flutter_settings_screens.dart" :as settings]
             ["package:easy_localization/easy_localization.dart" :as l10n]
-            [club.bhikers.lib.utils :refer [l10n-str
-                                            str->int
+            [club.bhikers.lib.i18n :refer [l10n-str]]
+            [club.bhikers.lib.utils :refer [str->int
                                             str->location-accuracy
                                             location-accuracy->str]]
             [club.bhikers.lib.state :refer [selected-poi-type

@@ -1,31 +1,28 @@
 (ns club.bhikers.lib.utils
   (:require
    ["package:uuid/uuid.dart" :as uuid]
-   ["package:dio/dio.dart" :as dio]
-   ["package:dio_cache_interceptor/dio_cache_interceptor.dart" :as cache]
-   ["package:geolocator/geolocator.dart" :as geo]
-   ["package:easy_localization/easy_localization.dart" :as l10n]
-   ["package:path_provider/path_provider.dart" :refer [getApplicationDocumentsDirectory]]
-   ["dart:io" :refer [Directory]]))
+   ["package:geolocator/geolocator.dart" :as geo]))
 
-(defn l10n-str [& args] (apply str (map l10n/tr args)))
-
-(defn ^#/(Future Directory) log-file-dir [] (await (getApplicationDocumentsDirectory)))
-
-;; Setup dio instance with cache+log interceptors for overpass-api.de
-;; dio is a lib for http requests
+;; UUID generation utilities
 (defonce uuidgen (atom (uuid/Uuid)))
 
-(defn uuid-v5 [url] (.v5 ^uuid/Uuid @uuidgen uuid/Uuid.NAMESPACE_URL url))
+(defn uuid-v5 [url]
+  "Generate UUID v5 from URL using NAMESPACE_URL."
+  (.v5 ^uuid/Uuid @uuidgen uuid/Uuid.NAMESPACE_URL url))
 
-(defn uuid-v4 [] (.v4 ^uuid/Uuid @uuidgen))
+(defn uuid-v4 []
+  "Generate random UUID v4."
+  (.v4 ^uuid/Uuid @uuidgen))
 
-(defn create-cache-store ^cache/MemCacheStore [max-nb-of-entries max-entry-size]
-  (cache/MemCacheStore .maxSize (* max-nb-of-entries max-entry-size) .maxEntrySize max-entry-size))
-
-(defn str->int [s min max] (let [num (int/tryParse s)] (if (and num (< min num max)) num nil)))
+;; Type conversion utilities
+(defn str->int [s min max]
+  "Convert string to integer within range bounds.
+   Returns nil if conversion fails or out of bounds."
+  (let [num (int/tryParse s)]
+    (if (and num (< min num max)) num nil)))
 
 (defn str->location-accuracy [s]
+  "Convert string to LocationAccuracy enum."
   (cond
     (= s "low") geo/LocationAccuracy.low
     (= s "medium") geo/LocationAccuracy.medium
@@ -33,43 +30,9 @@
     :else nil))
 
 (defn location-accuracy->str [a]
+  "Convert LocationAccuracy enum to string."
   (cond
     (= a geo/LocationAccuracy.low) "low"
     (= a geo/LocationAccuracy.medium) "medium"
     (= a geo/LocationAccuracy.high) "high"
     :else nil))
-
-(defn create-dio-instance ^dio/Dio [
-                                    & {:keys [base-url
-                                              query-timeout
-                                              cache-store
-                                              with-log?]
-                                       :or {base-url nil
-                                            query-timeout (Duration .seconds 2)
-                                            cache-store nil
-                                            with-log? false}}]
-  (let [api (dio/Dio
-             (if base-url
-               (dio/BaseOptions .baseUrl base-url
-                                .connectTimeout query-timeout .receiveTimeout query-timeout)
-               (dio/BaseOptions .connectTimeout query-timeout .receiveTimeout query-timeout)))]
-    (when cache-store
-      (.add (.-interceptors api)
-            (cache/DioCacheInterceptor
-             .options (cache/CacheOptions
-                       .store cache-store
-                       .policy cache/CachePolicy.forceCache
-                       .hitCacheOnErrorExcept [401 403]
-                       .maxStale (Duration .days 1)
-                       .priority cache/CachePriority.normal
-                       .allowPostMethod false
-                       .keyBuilder (fn [^dio/RequestOptions req-opts]
-                                     (let [cache-key (->> req-opts
-                                                          .-uri
-                                                          .toString
-                                                          (uuid-v5))]
-                                       cache-key))))))
-    (when with-log?
-      (.add (.-interceptors api)
-            (dio/LogInterceptor)))
-    api))

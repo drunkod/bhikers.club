@@ -2,7 +2,7 @@
   (:require ["package:flutter/material.dart" :as m]
             [club.bhikers.screens.common.appbar :refer [app-bar]]
             [club.bhikers.screens.common.drawer :refer [drawer]]
-            [club.bhikers.lib.utils :refer [l10n-str]]
+            [club.bhikers.lib.i18n :refer [l10n-str]]
             [cljd.flutter :as f]))
 
 ;; Setup enhance gpx screen

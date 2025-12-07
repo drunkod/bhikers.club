@@ -1,7 +1,8 @@
 (ns club.bhikers.lib.appupdate
   (:require
    ["package:dio/dio.dart" :as dio]
-   [club.bhikers.lib.utils :refer [l10n-str create-dio-instance]]
+   [club.bhikers.lib.http :refer [create-dio-instance]]
+   [club.bhikers.lib.i18n :refer [l10n-str]]
    [club.bhikers.lib.logging :as logging]
    [club.bhikers.lib.notifications :refer [new-notif]]
    [club.bhikers.lib.state :refer [app-info

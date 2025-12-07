@@ -8,7 +8,7 @@
    ["package:flutter_svg/flutter_svg.dart" :refer [SvgPicture]]
    ["package:url_launcher/link.dart" :as link]
    [cljd.flutter :as f]
-   [club.bhikers.lib.utils :refer [l10n-str]]
+   [club.bhikers.lib.i18n :refer [l10n-str]]
    [club.bhikers.lib.logging :as logging]))
 
 ;; =============================================================================

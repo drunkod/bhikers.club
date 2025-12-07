@@ -1,7 +1,7 @@
 (ns club.bhikers.screens.debuglog
   (:require ["package:flutter/material.dart" :as m]
             ["dart:io" :refer [File]]
-            [club.bhikers.lib.utils :refer [l10n-str]]
+            [club.bhikers.lib.i18n :refer [l10n-str]]
             [club.bhikers.lib.logging :refer [latest-log-file]]
             [cljd.flutter :as f]))
 

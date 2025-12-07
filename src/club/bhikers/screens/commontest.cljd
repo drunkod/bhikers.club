@@ -2,7 +2,7 @@
   (:require  ["package:flutter_test/flutter_test.dart" :as ft]
              ["package:flutter/material.dart" :as m]
              [club.bhikers.main :refer [BhikersClubApp]]
-             [club.bhikers.lib.utils :refer [l10n-str]]
+             [club.bhikers.lib.i18n :refer [l10n-str]]
              [club.bhikers.lib.app :as app]
              [club.bhikers.lib.state :as state]
              [club.bhikers.lib.logging :as logging]

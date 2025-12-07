@@ -2,15 +2,19 @@
   (:require
    ["package:flutter/foundation.dart" :refer [debugPrint]]
    ["package:path/path.dart" :refer [basename]]
-   ["dart:io" :refer [File]]
+   ["package:path_provider/path_provider.dart" :refer [getApplicationDocumentsDirectory]]
+   ["dart:io" :refer [File Directory]]
    ["package:logger/logger.dart" :refer
     [Logger AdvancedFileOutput ConsoleOutput MultiOutput
      DateTimeFormat SimplePrinter Level]]
 
-   [club.bhikers.lib.state :refer [force-debug-mode? debug-mode?]]
-   [club.bhikers.lib.utils :refer [log-file-dir]]))
+   [club.bhikers.lib.state :refer [force-debug-mode? debug-mode?]]))
 
 (defonce logger (atom nil))
+
+(defn ^#/(Future Directory) log-file-dir []
+  "Returns the application documents directory for log files."
+  (await (getApplicationDocumentsDirectory)))
 
 (defn d [& args]
   (let [msg (apply str (into ["[club.bhikers] "] args))]
