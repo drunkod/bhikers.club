@@ -1,0 +1,127 @@
+(ns club.bhikers.lib.map.state
+"Map state management and stream logic."
+(:require
+["package:geolocator/geolocator.dart" :as geo]
+["package:flutter_map_location_marker/flutter_map_location_marker.dart" :as maploc]
+["dart:async" :as async]
+[club.bhikers.lib.notifications :refer [debug-notif]]
+[club.bhikers.lib.state :refer [debug-mode? selected-poi-type pois-radius]]
+[club.bhikers.lib.i18n :refer [l10n-str]]
+[club.bhikers.lib.logging :as logging]
+[club.bhikers.lib.position
+:refer
+[new-position-stream-controller
+new-position-bstream
+->location-marker-stream
+subscribe-position-stream
+force-current-position]]))
+
+
+(defn new-state []
+"Creates a new map state atom initialized with default values from global state."
+(let [map-state (atom {:selected-poi-type @selected-poi-type
+:current-pos nil
+:current-center nil
+:current-pos-as-center? true
+:transient-radius @pois-radius
+:radius @pois-radius
+:align-position-on-update maploc/AlignOnUpdate.always})]
+(when (debug-mode?)
+(add-watch
+map-state :map-message
+(fn [_ _ old-state new-state]
+(let [old-pos (get old-state :current-pos)
+new-pos (get new-state :current-pos)
+msg (get new-state :message)
+ulocstr (l10n-str "around_me.unknown_location")]
+(when (not= old-pos new-pos)
+(cond
+;; assoc unknown loc message only if map message is empty
+(and (empty? msg) (not new-pos)) (swap! map-state assoc :message ulocstr)
+;; dissoc message only if message was unknown loc
+(and (= msg ulocstr) new-pos) (swap! map-state dissoc :message)))))))
+map-state))
+
+(defprotocol disposable-streams
+(dispose! [this] "Disposes of all streams and subscriptions.")
+(init! [this] "Initializes the position streams.")
+(location-marker-stream [this] "Returns the stream of location markers.")
+(align-position-stream [this] "Returns the stream for aligning map position.")
+(align-on-current-pos-callback [this force-position-refresh?] "Returns a callback to force alignment on current position.")
+(new-center! [this [lat lon]] "Updates the map center manually.")
+(stop-alignment! [this] "Stops the automatic alignment of map to current position."))
+
+(defn ->state-streams [map-state]
+"Creates an implementation of disposable-streams for the given map state atom."
+(reify disposable-streams
+(dispose! [this]
+(let [{:keys [streamz]} @map-state
+{:keys [pss apsc psc]} streamz]
+(when pss
+(logging/d "cancel subscription")
+(.cancel ^#/(async/StreamSubscription geo/Position?) pss))
+(when apsc
+(logging/d "cancel align position stream controller.")
+(.close ^#/(async/StreamController double?) apsc))
+(when psc
+(logging/d "cancel position stream controller")
+(.close ^#/(async/StreamController geo/Position?) psc))
+(swap! map-state dissoc :streamz))
+this)
+
+(init! [this]
+  (let [psc (new-position-stream-controller)
+        apsc (#/(async/StreamController double?))
+        ps (new-position-bstream psc)
+        lms (->location-marker-stream ps)
+        pss (subscribe-position-stream
+             ps
+             (fn [lat0 lon0]
+               (let [{:keys [current-pos]} @map-state
+                     lon (/ (.floor (* lon0 100000)) 100000) ;; round lat lon precision to 5 decimal digits
+                     lat (/ (.floor (* lat0 100000)) 100000)]
+                 (logging/d "position event from stream: " lat " " lon)
+                 (when (not= [lat lon] current-pos)
+                   (debug-notif "position fetched from stream updated: " lat " " lon)
+                  ;; swap position before refreshing pois
+                   (swap! map-state assoc :current-pos [lat lon])))))]
+
+    (swap! map-state assoc :streamz
+           {:psc psc :ps ps :apsc apsc :lms lms :pss pss}))
+  this)
+(location-marker-stream [_]
+  (let [{:keys [streamz]} @map-state
+        {:keys [lms]} streamz]
+    lms))
+(align-position-stream [_]
+  (let [{:keys [streamz]} @map-state
+        {:keys [apsc]} streamz]
+    (when apsc (.-stream ^#/(async/StreamController double?) apsc))))
+(align-on-current-pos-callback [_ force-position-refresh?]
+  (fn []
+    (let [{:keys [streamz current-pos-as-center? align-position-on-update]} @map-state
+          {:keys [apsc psc]} streamz]
+      (when force-position-refresh?
+        (swap! map-state assoc :message "force refresh position!")
+        (logging/d "force refresh current position")
+        (let [refreshed-pos (await (force-current-position))]
+          (-> ^#/(async/StreamController geo/Position?) psc .-sink (.add ^geo/Position refreshed-pos))))
+
+      (logging/d "(re)align map on current position")
+      (when (or (not= align-position-on-update maploc/AlignOnUpdate.always)
+                (not current-pos-as-center?))
+        (swap! map-state assoc
+               :align-position-on-update maploc/AlignOnUpdate.always
+               :current-pos-as-center? true))
+      (when (and apsc (not (.-isClosed ^#/(async/StreamController double?) apsc)))
+        (.add ^#/(async/StreamController double?) apsc nil)))))
+(new-center! [_ [lat lon]]
+  (swap! map-state assoc
+         :align-position-on-update maploc/AlignOnUpdate.never
+         :current-center [lat lon]
+         :current-pos-as-center? false))
+(stop-alignment! [_]
+ ;; beware gestures are flooding calls
+  (let [{:keys [align-position-on-update]} @map-state]
+    (when (not= align-position-on-update maploc/AlignOnUpdate.never)
+      (swap! map-state assoc :align-position-on-update maploc/AlignOnUpdate.never))))))

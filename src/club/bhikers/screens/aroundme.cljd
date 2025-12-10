@@ -7,7 +7,8 @@
 [club.bhikers.lib.config :refer [icicommencelaventure
 vertouplage]]
 [club.bhikers.lib.state :refer [debug-mode?]]
-[club.bhikers.lib.map :as map]
+[club.bhikers.lib.map.state :as map-state]
+[club.bhikers.lib.map.widgets :as map-widgets]
 [club.bhikers.screens.common.appbar :refer [app-bar]]
 [club.bhikers.screens.common.drawer :refer [drawer]]
 ;; Imported Modules
@@ -15,14 +16,15 @@ vertouplage]]
 [club.bhikers.screens.aroundme.layers :as layers]
 [cljd.flutter :as f]))
 
+
 ;; Around me ( +/- 10/20km): POIs*
 
 (defn around-me-screen []
 (f/widget
 :let [scaffold-key (#/(m/GlobalKey m/ScaffoldState))]
-:bind {:map-state (map/new-state)}
+:bind {:map-state (map-state/new-state)}
 :get [:map-state m/Theme]
-:managed [dms (-> map-state map/->state-streams map/init!) :dispose map/dispose!]
+:managed [dms (-> map-state map-state/->state-streams map-state/init!) :dispose map-state/dispose!]
 :watch [{:keys [align-position-on-update current-pos-as-center? current-center]} map-state]
 (m/Scaffold
 .key scaffold-key
@@ -42,27 +44,27 @@ vertouplage]]
 .minZoom 0
 .maxZoom 18
 .onLongPress (fn [_ ^LatLng point]
-(map/new-center! dms [(.-latitude point) (.-longitude point)]))
+(map-state/new-center! dms [(.-latitude point) (.-longitude point)]))
 
 ;; Stop aligning the location marker to the center of the map widget
-;; if user interacted with the map
-.onPositionChanged (fn [_ hasGesture] (when hasGesture (map/stop-alignment! dms))))
-.children
-[(layers/base-map-layer)
-(layers/pois-markers-widget)
-(maploc/CurrentLocationLayer
-.style (layers/current-location-marker-style current-pos-as-center? theme)
-.positionStream (map/location-marker-stream dms)
-.alignPositionStream (map/align-position-stream dms)
-.alignPositionOnUpdate align-position-on-update
-.alignDirectionOnUpdate maploc/AlignOnUpdate.never)
-(map/control-buttons :alignment m/Alignment.bottomRight
-:onMyLocation (map/align-on-current-pos-callback dms false)
-:onMyLocationSecondary (map/align-on-current-pos-callback dms true))
-(fmap/Scalebar
-.textStyle (m/TextStyle .color m/Colors.black .fontSize 14)
-.alignment m/Alignment.bottomLeft
-.length fmap/ScalebarLength.m)
-(MapCompass.cupertino .alignment m/Alignment.topLeft)
-(layers/current-center-marker current-pos-as-center? current-center)
-(map/msg)]))))
+           ;; if user interacted with the map
+           .onPositionChanged (fn [_ hasGesture] (when hasGesture (map-state/stop-alignment! dms))))
+ .children
+ [(layers/base-map-layer)
+  (layers/pois-markers-widget)
+  (maploc/CurrentLocationLayer
+   .style (layers/current-location-marker-style current-pos-as-center? theme)
+   .positionStream (map-state/location-marker-stream dms)
+   .alignPositionStream (map-state/align-position-stream dms)
+   .alignPositionOnUpdate align-position-on-update
+   .alignDirectionOnUpdate maploc/AlignOnUpdate.never)
+  (map-widgets/control-buttons :alignment m/Alignment.bottomRight
+                               :onMyLocation (map-state/align-on-current-pos-callback dms false)
+                               :onMyLocationSecondary (map-state/align-on-current-pos-callback dms true))
+  (fmap/Scalebar
+   .textStyle (m/TextStyle .color m/Colors.black .fontSize 14)
+   .alignment m/Alignment.bottomLeft
+   .length fmap/ScalebarLength.m)
+  (MapCompass.cupertino .alignment m/Alignment.topLeft)
+  (layers/current-center-marker current-pos-as-center? current-center)
+  (map-widgets/msg)]))))
