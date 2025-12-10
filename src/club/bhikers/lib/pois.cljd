@@ -1,59 +1,32 @@
 (ns club.bhikers.lib.pois
-  (:require
-   ["package:latlong2/latlong.dart" :refer [LatLng]]
-   [club.bhikers.lib.logging :as logging]
-   [club.bhikers.lib.overpassapi :as oapi]))
-
-(defonce poi-types->osm-tags {"shelter" ["amenity=shelter"
-                                         "shelter=yes"
-                                         "shelter_type=weather_shelter"
-                                         "shelter_type=picnic_shelter"
-                                         "tourism=alpine_hut"]
-                              "hotel" ["tourism=hotel"
-                                       "building=hotel"
-                                       "tourism=alpine_hut"
-                                       "tourism=motel"
-                                       "tourism=hostel"
-                                       "tourism=guest_house"]
-                              "campsite" ["tourism=camp_site"
-                                          "tourism=alpine_hut"
-                                          "tourism=caravan_site"
-                                          "tourism=wilderness_hut"
-                                          "tourism=picnic_site"]
-                              "restaurant" ["amenity=restaurant"
-                                            "amenity=cafe"]
-                              "sandwich" ["shop=bakery"
-                                          "shop=pastry"
-                                          "cuisine=sandwich"
-                                          "amenity=fast_food"]
-                              "bikeshop" ["shop=bicycle"
-                                          "amenity=bicycle_repair_station"
-                                          "service:bicycle:retail=yes"
-                                          "service:bicycle:repair=yes"]
-                              "bottlerefill" ["fountain=drinking"
-                                              "fountain=bottle_refill"
-                                              "amenity=drinking_water"
-                                              "bottle=yes"
-                                              "drinking_water=yes"]
-                              "toilet" ["amenity=toilets"
-                                        "toilets=yes"
-                                        "building=toilets"]})
+(:require
+["package:latlong2/latlong.dart" :refer [LatLng]]
+[club.bhikers.lib.config :refer [poi-types->osm-tags]]
+[club.bhikers.lib.logging :as logging]
+[club.bhikers.lib.overpassapi :as oapi]))
 
 (defn poi-type->osm-tags [type] (get poi-types->osm-tags type false))
 
 (defn overpass-item->poi [^Map item items selected-poi-type]
-  (.putIfAbsent item "poi-type" (fn [] selected-poi-type))
-  (when (= (get item "type") "way")
-    ;; finds way's first node id into items to inject lat/lon into item
-    (when-let [first-way-node (some #(let [first-node-id  (first (get item "nodes" []))]
-                                       (when (and (not= nil first-node-id)
-                                                  (= first-node-id (get % "id")))
-                                         %))
-                                    items)]
-      (doto item
-        (.putIfAbsent "lat" (fn [] (get first-way-node "lat")))
-        (.putIfAbsent "lon" (fn [] (get first-way-node "lon"))))))
-  item)
+(.putIfAbsent item "poi-type" (fn [] selected-poi-type))
+(when (= (get item "type") "way")
+;; finds way's first node id into items to inject lat/lon into item
+(when-let [first-way-node (some #(let [first-node-id (first (get item "nodes" []))]
+(when (and (not= nil first-node-id)
+(= first-node-id (get % "id")))
+%))
+items)]
+(doto item
+(.putIfAbsent "lat" (fn [] (get first-way-node "lat")))
+(.putIfAbsent "lon" (fn [] (get first-way-node "lon"))))))
+item)
+
+(defn fetch-pois-by-type [overpass-api t lat lon tags radius selected-poi-type]
+(let [all-items (await (oapi/query overpass-api t lat lon tags radius))]
+(if (nil? all-items)
+nil
+(let [typed-items (filter #(= t (get % "type")) all-items)]
+(map #(overpass-item->poi % all-items selected-poi-type) typed-items)))))
 
 ;; The dynamic-map-pois returns an atom of an empty list of POIs and adds
 ;; a watch on the map-state.
@@ -77,44 +50,41 @@
 ;;
 ;; NOTE:
 ;; - osm objects of type "node" have lat and lon attrs and don't require any additional
-;;   logic.
+;; logic.
 ;;
 ;; - osm objects of type "way" dont have lat and lon attributes but instead a list of node ids.
-;;   So when we query objects of type "way" we ask the overpass api to also return the node objects
-;;   corresponding to the node ids with the special "(._;>;);" query feature.
-;;   For each "way" item found, we post inject its first node's lat lon attributes before returning it
-;;   (see overpass-item->poi)
+;; So when we query objects of type "way" we ask the overpass api to also return the node objects
+;; corresponding to the node ids with the special "(._;>;);" query feature.
+;; For each "way" item found, we post inject its first node's lat lon attributes before returning it
+;; (see overpass-item->poi)
 (defn dynamic-map-pois [map-state overpass-api]
-  (let [pois (atom [])
-        query-reporter (atom "")]
-    (add-watch query-reporter :report-map-msg (fn [_ _ _ new-msg] (swap! map-state assoc :message new-msg)))
-    (add-watch map-state :refresh-pois
-               (fn [_ _ old-state new-state]
-                 (when (not= (select-keys old-state [:radius :selected-poi-type :current-pos :current-center :current-pos-as-center?])
-                             (select-keys new-state [:radius :selected-poi-type :current-pos :current-center :current-pos-as-center?]))
-                   (logging/d "refreshing pois!")
-                   (let [{:keys [radius selected-poi-type current-pos current-center current-pos-as-center?]} new-state
-                         [lat lon] (if (and current-pos-as-center? current-pos) current-pos current-center)
-                         osm-tags (poi-type->osm-tags selected-poi-type)]
-                     (when (or (and current-pos-as-center? current-pos) current-center)
-                       (reset! pois [])
-                       (doseq [t ["node" "way"]
-                               tags (partition-all 2 osm-tags)]
-                         (reset! query-reporter (str "fetch:" t tags))
-                         (let [all-items (await (oapi/query overpass-api t lat lon tags radius))
-                               typed-items (filter #(= t (get % "type")) all-items)
-                               _pois (map #(overpass-item->poi % all-items selected-poi-type)
-                                          typed-items)]
-                           (cond
-                             (= _pois nil)
-                             (reset! query-reporter (str "FAILED! " t tags))
-                             (= (count _pois) 0)
-                             (logging/d "no pois fetched! map-state was: " new-state)
-                             :else
-                             (do (logging/d "adding " (count _pois) " pois fetched!")
-                                 (reset! pois (into @pois _pois))))))
-                       (reset! query-reporter (str "fetched " (count @pois) " pois.")))))))
+(let [pois (atom [])
+query-reporter (atom "")]
+(add-watch query-reporter :report-map-msg (fn [_ _ _ new-msg] (swap! map-state assoc :message new-msg)))
+(add-watch map-state :refresh-pois
+(fn [_ _ old-state new-state]
+(when (not= (select-keys old-state [:radius :selected-poi-type :current-pos :current-center :current-pos-as-center?])
+(select-keys new-state [:radius :selected-poi-type :current-pos :current-center :current-pos-as-center?]))
+(logging/d "refreshing pois!")
+(let [{:keys [radius selected-poi-type current-pos current-center current-pos-as-center?]} new-state
+[lat lon] (if (and current-pos-as-center? current-pos) current-pos current-center)
+osm-tags (poi-type->osm-tags selected-poi-type)]
+(when (or (and current-pos-as-center? current-pos) current-center)
+(reset! pois [])
+(doseq [t ["node" "way"]
+tags (partition-all 2 osm-tags)]
+(reset! query-reporter (str "fetch:" t tags))
+(let [_pois (await (fetch-pois-by-type overpass-api t lat lon tags radius selected-poi-type))]
+(cond
+(nil? _pois)
+(reset! query-reporter (str "FAILED! " t tags))
+(empty? _pois)
+(logging/d "no pois fetched! map-state was: " new-state)
+:else
+(do (logging/d "adding " (count _pois) " pois fetched!")
+(swap! pois into _pois)))))
+(reset! query-reporter (str "fetched " (count @pois) " pois.")))))))
 
-    pois))
+pois))
 
 (defn poi->LatLng [poi] (LatLng (get poi "lat") (get poi "lon")))

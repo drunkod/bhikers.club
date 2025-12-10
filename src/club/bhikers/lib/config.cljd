@@ -1,5 +1,8 @@
 (ns club.bhikers.lib.config
-  (:require ["package:latlong2/latlong.dart" :as ll]))
+(:require ["package:latlong2/latlong.dart" :as ll]
+["package:vector_graphics/vector_graphics.dart" :refer [AssetBytesLoader]]
+["package:flutter_svg/flutter_svg.dart" :refer [SvgPicture]]))
+
 
 ;; =============================================================================
 ;; CONSTANTS & DEFAULTS
@@ -9,16 +12,16 @@
 (defonce supported-locales ["en" "fr" "it" "es" "de" "ru"])
 (defonce default-locale "en")
 (defonce max-pois-radius 10000) ;; 20km
-(defonce min-pois-radius 500)   ;; 500m
+(defonce min-pois-radius 500) ;; 500m
 
 (defonce supported-poi-types ["shelter"
-                              "hotel"
-                              "campsite"
-                              "restaurant"
-                              "sandwich"
-                              "bikeshop"
-                              "bottlerefill"
-                              "toilet"])
+"hotel"
+"campsite"
+"restaurant"
+"sandwich"
+"bikeshop"
+"bottlerefill"
+"toilet"])
 
 (defonce default-poi-type "sandwich")
 
@@ -27,19 +30,95 @@
 ;; =============================================================================
 
 (defonce raster-tile-servers
-  {"osm" {:name "OpenStreetMap"
-          :url "https://tile.openstreetmap.org/{z}/{x}/{y}.png"}
-   "otm" {:name "OpenTopoMap"
-          :url "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"}
-   "cyclosm" {:name "CyclOSM"
-              :url "https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png"}})
+{"osm" {:name "OpenStreetMap"
+:url "https://tile.openstreetmap.org/{z}/{x}/{y}.png"}
+"otm" {:name "OpenTopoMap"
+:url "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"}
+"cyclosm" {:name "CyclOSM"
+:url "https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png"}})
 
 (defonce vector-tile-styles
-  {"protomaps" {:name "MapLibre (Protomaps)"
-                :url "https://api.protomaps.com/styles/v2/light.json?key=48c711a2fc69c6f0"}})
+{"protomaps" {:name "MapLibre (Protomaps)"
+:url "https://api.protomaps.com/styles/v2/light.json?key=48c711a2fc69c6f0"}})
 
 (defonce icicommencelaventure (ll/LatLng 48.51479 2.65053))
 (defonce vertouplage (ll/LatLng 47.1612 -1.4778))
+
+;; =============================================================================
+;; POI CONFIGURATION
+;; =============================================================================
+
+(defonce poi-types->osm-tags {"shelter" ["amenity=shelter"
+"shelter=yes"
+"shelter_type=weather_shelter"
+"shelter_type=picnic_shelter"
+"tourism=alpine_hut"]
+"hotel" ["tourism=hotel"
+"building=hotel"
+"tourism=alpine_hut"
+"tourism=motel"
+"tourism=hostel"
+"tourism=guest_house"]
+"campsite" ["tourism=camp_site"
+"tourism=alpine_hut"
+"tourism=caravan_site"
+"tourism=wilderness_hut"
+"tourism=picnic_site"]
+"restaurant" ["amenity=restaurant"
+"amenity=cafe"]
+"sandwich" ["shop=bakery"
+"shop=pastry"
+"cuisine=sandwich"
+"amenity=fast_food"]
+"bikeshop" ["shop=bicycle"
+"amenity=bicycle_repair_station"
+"service:bicycle:retail=yes"
+"service:bicycle:repair=yes"]
+"bottlerefill" ["fountain=drinking"
+"fountain=bottle_refill"
+"amenity=drinking_water"
+"bottle=yes"
+"drinking_water=yes"]
+"toilet" ["amenity=toilets"
+"toilets=yes"
+"building=toilets"]})
+
+(defn osm-tag-icon [type name]
+(SvgPicture (AssetBytesLoader (str "src/resources/icons/symbols/" type "/" name ".svg.vec"))))
+
+(defonce osm-tags->icons
+{"service:bicycle:repair=yes" (osm-tag-icon "amenity" "bicycle_repair_station")
+"service:bicycle:retail=yes" (osm-tag-icon "shop" "bicycle")
+"amenity=bicycle_repair_station" (osm-tag-icon "amenity" "bicycle_repair_station")
+"amenity=cafe" (osm-tag-icon "amenity" "cafe")
+"amenity=drinking_water" (osm-tag-icon "amenity" "drinking_water")
+"amenity=fast_food" (osm-tag-icon "amenity" "fast_food")
+"amenity=restaurant" (osm-tag-icon "amenity" "restaurant")
+"amenity=shelter" (osm-tag-icon "amenity" "shelter")
+"amenity=toilets" (osm-tag-icon "amenity" "toilets")
+"bottle=yes" (osm-tag-icon "amenity" "drinking_water")
+"building=hotel" (osm-tag-icon "tourism" "hotel")
+"building=toilets" (osm-tag-icon "amenity" "toilets")
+"cuisine=sandwich" (osm-tag-icon "amenity" "fast_food")
+"drinking_water=yes" (osm-tag-icon "amenity" "drinking_water")
+"fountain=bottle_refill" (osm-tag-icon "amenity" "fountain")
+"fountain=drinking" (osm-tag-icon "amenity" "fountain")
+"shelter=yes" (osm-tag-icon "amenity" "shelter")
+"shelter_type=picnic_shelter" (osm-tag-icon "amenity" "shelter")
+"shelter_type=weather_shelter" (osm-tag-icon "amenity" "shelter")
+"shop=bakery" (osm-tag-icon "shop" "bakery")
+"shop=bicycle" (osm-tag-icon "shop" "bicycle")
+"shop=pastry" (osm-tag-icon "shop" "bakery")
+"toilets=yes" (osm-tag-icon "amenity" "toilets")
+"tourism=alpine_hut" (osm-tag-icon "tourism" "alpinehut")
+"tourism=camp_site" (osm-tag-icon "tourism" "camp_site")
+"tourism=caravan_site" (osm-tag-icon "tourism" "camp_site")
+"tourism=guest_house" (osm-tag-icon "tourism" "guest_house")
+"tourism=hostel" (osm-tag-icon "tourism" "hostel")
+"tourism=hotel" (osm-tag-icon "tourism" "hotel")
+"tourism=motel" (osm-tag-icon "tourism" "motel")
+"tourism=picnic_site" (osm-tag-icon "tourism" "picnic_site")
+"tourism=wilderness_hut" (osm-tag-icon "tourism" "wilderness_hut")})
 
 ;; =============================================================================
 ;; FEATURE FLAGS
