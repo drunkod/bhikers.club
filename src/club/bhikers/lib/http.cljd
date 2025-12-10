@@ -1,54 +1,58 @@
 (ns club.bhikers.lib.http
-  "HTTP client utilities using Dio."
-  (:require
-   ["package:dio/dio.dart" :as dio]
-   ["package:dio_cache_interceptor/dio_cache_interceptor.dart" :as cache]
-   [club.bhikers.lib.utils :refer [uuid-v5]]))
+"HTTP client utilities using Dio."
+(:require
+["package:dio/dio.dart" :as dio]
+["package:dio_cache_interceptor/dio_cache_interceptor.dart" :as cache]
+[club.bhikers.lib.utils :refer [uuid-v5]]))
 
-(defn create-cache-store ^cache/MemCacheStore [max-nb-of-entries max-entry-size]
-  "Creates a memory cache store for HTTP responses.
-   Args:
-     max-nb-of-entries - Maximum number of cached entries
-     max-entry-size - Maximum size per entry in bytes"
-  (cache/MemCacheStore .maxSize (* max-nb-of-entries max-entry-size) .maxEntrySize max-entry-size))
+(defn create-cache-store
+"Creates a memory cache store for HTTP responses.
 
-(defn create-dio-instance ^dio/Dio [
-                                   & {:keys [base-url
-                                             query-timeout
-                                             cache-store
-                                             with-log?]
-                                    :or {base-url nil
-                                         query-timeout (Duration .seconds 2)
-                                         cache-store nil
-                                         with-log? false}}]
-  "Creates a configured Dio HTTP client instance.
-   Options:
-     :base-url - Base URL for requests
-     :query-timeout - Request timeout duration
-     :cache-store - Optional cache store
-     :with-log? - Enable request logging"
-  (let [api (dio/Dio
-             (if base-url
-               (dio/BaseOptions .baseUrl base-url
-                                .connectTimeout query-timeout .receiveTimeout query-timeout)
-               (dio/BaseOptions .connectTimeout query-timeout .receiveTimeout query-timeout)))]
-    (when cache-store
-      (.add (.-interceptors api)
-            (cache/DioCacheInterceptor
-             .options (cache/CacheOptions
-                       .store cache-store
-                       .policy cache/CachePolicy.forceCache
-                       .hitCacheOnErrorExcept [401 403]
-                       .maxStale (Duration .days 1)
-                       .priority cache/CachePriority.normal
-                       .allowPostMethod false
-                       .keyBuilder (fn [^dio/RequestOptions req-opts]
-                                     (let [cache-key (->> req-opts
-                                                          .-uri
-                                                          .toString
-                                                          (uuid-v5))]
-                                       cache-key))))))
-    (when with-log?
-      (.add (.-interceptors api)
-            (dio/LogInterceptor)))
-    api))
+Args:
+max-nb-of-entries: Maximum number of entries to keep in cache.
+max-entry-size: Maximum size of a single entry in bytes."
+^cache/MemCacheStore [max-nb-of-entries max-entry-size]
+(cache/MemCacheStore .maxSize (* max-nb-of-entries max-entry-size) .maxEntrySize max-entry-size))
+
+(defn create-dio-instance
+"Creates a configured Dio HTTP client instance.
+
+Options:
+:base-url - The base URL for requests.
+:query-timeout - Duration for connect and receive timeouts (default: 2s).
+:cache-store - An optional DioCacheInterceptor store.
+:with-log? - Boolean to enable DioLogInterceptor (default: false)."
+^dio/Dio
+[& {:keys [base-url
+query-timeout
+cache-store
+with-log?]
+:or {base-url nil
+query-timeout (Duration .seconds 2)
+cache-store nil
+with-log? false}}]
+(let [api (dio/Dio
+(if base-url
+(dio/BaseOptions .baseUrl base-url
+.connectTimeout query-timeout .receiveTimeout query-timeout)
+(dio/BaseOptions .connectTimeout query-timeout .receiveTimeout query-timeout)))]
+(when cache-store
+(.add (.-interceptors api)
+(cache/DioCacheInterceptor
+.options (cache/CacheOptions
+.store cache-store
+.policy cache/CachePolicy.forceCache
+.hitCacheOnErrorExcept [401 403]
+.maxStale (Duration .days 1)
+.priority cache/CachePriority.normal
+.allowPostMethod false
+.keyBuilder (fn [^dio/RequestOptions req-opts]
+(let [cache-key (->> req-opts
+.-uri
+.toString
+(uuid-v5))]
+cache-key))))))
+(when with-log?
+(.add (.-interceptors api)
+(dio/LogInterceptor)))
+api))

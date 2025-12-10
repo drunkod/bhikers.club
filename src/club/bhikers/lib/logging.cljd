@@ -1,51 +1,65 @@
 (ns club.bhikers.lib.logging
-  (:require
-   ["package:flutter/foundation.dart" :refer [debugPrint]]
-   ["package:path/path.dart" :refer [basename]]
-   ["package:path_provider/path_provider.dart" :refer [getApplicationDocumentsDirectory]]
-   ["dart:io" :refer [File Directory]]
-   ["package:logger/logger.dart" :refer
-    [Logger AdvancedFileOutput ConsoleOutput MultiOutput
-     DateTimeFormat SimplePrinter Level]]
+(:require
+["package:flutter/foundation.dart" :refer [debugPrint]]
+["package:path/path.dart" :refer [basename]]
+["package:path_provider/path_provider.dart" :refer [getApplicationDocumentsDirectory]]
+["dart:io" :refer [File Directory]]
+["package:logger/logger.dart" :refer
+[Logger AdvancedFileOutput ConsoleOutput MultiOutput
+DateTimeFormat SimplePrinter Level]]
 
-   [club.bhikers.lib.state :refer [force-debug-mode? debug-mode?]]))
+[club.bhikers.lib.state :refer [force-debug-mode? debug-mode?]]))
 
 (defonce logger (atom nil))
 
-(defn ^#/(Future Directory) log-file-dir []
-  "Returns the application documents directory for log files."
-  (await (getApplicationDocumentsDirectory)))
+(defn ^#/(Future Directory) log-file-dir
+"Returns the application documents directory for log files."
+[]
+(await (getApplicationDocumentsDirectory)))
 
-(defn d [& args]
-  (let [msg (apply str (into ["[club.bhikers] "] args))]
-    (if @logger
-      (.d ^Logger @logger msg)
-      (debugPrint msg))))
+(defn d
+"Log a debug message.
+Arguments are concatenated.
+If logger is initialized, uses it; otherwise falls back to debugPrint."
+[& args]
+(let [msg (apply str (into ["[club.bhikers] "] args))]
+(if @logger
+(.d ^Logger @logger msg)
+(debugPrint msg))))
 
-(defn ^#/(Future File) latest-log-file []
-  (first (filter #(= "latest.log" (basename (.-path ^File %)))
-                  (.listSync (await (log-file-dir))))))
+(defn ^#/(Future File) latest-log-file
+"Returns the file handle for 'latest.log' in the log directory."
+[]
+(first (filter #(= "latest.log" (basename (.-path ^File %)))
+(.listSync (await (log-file-dir))))))
 
-(defn init! [& {:keys [mock-mode?] :or {mock-mode? false?}}]
-  (if mock-mode?
-    (d "logging mock mode!")
-    (do
-     (d "init logging system")
-     (when (not @logger)
-       (add-watch force-debug-mode? :reinit (fn [_ _ _ _]
-                                              (d "reinit logging system")
-                                              (init!))))
+(defn init!
+"Initialize the logging system.
+Options:
+:mock-mode? - If true, skips file logging initialization (useful for tests)."
+[& {:keys [mock-mode?] :or {mock-mode? false}}]
+(if mock-mode?
+(d "logging mock mode!")
+(do
+(d "init logging system")
+(when (not @logger)
+(add-watch force-debug-mode? :reinit (fn [_ _ _ _]
+(d "reinit logging system")
+(init!))))
 
-     (let [log-dir (await (log-file-dir))
-           _ (await (.create log-dir .recursive true))
-           file-output (AdvancedFileOutput .path (.-path log-dir))
-           new-logger (Logger
-                       .level (if (debug-mode?) Level.debug Level.info)
-                       .output (if (debug-mode?)
-                                 (MultiOutput [file-output (ConsoleOutput)])
-                                 file-output)
-                       .printer (SimplePrinter .colors true .printTime true))]
-       (d (str "swap logging system (see file in " (.-path log-dir) ")"))
-       (reset! logger new-logger)))))
+(let [log-dir (await (log-file-dir))
+_ (await (.create log-dir .recursive true))
+file-output (AdvancedFileOutput .path (.-path log-dir))
+new-logger (Logger
+.level (if (debug-mode?) Level.debug Level.info)
+.output (if (debug-mode?)
+(MultiOutput [file-output (ConsoleOutput)])
+file-output)
+.printer (SimplePrinter .colors true .printTime true))]
+(d (str "swap logging system (see file in " (.-path log-dir) ")"))
+(reset! logger new-logger)))))
 
-(defn dispose! [] (await (.close ^Logger @logger)))
+(defn dispose!
+"Closes the active logger."
+[]
+(await (.close ^Logger @logger)))

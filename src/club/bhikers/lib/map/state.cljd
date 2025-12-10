@@ -16,9 +16,10 @@ new-position-bstream
 subscribe-position-stream
 force-current-position]]))
 
-
-(defn new-state []
-"Creates a new map state atom initialized with default values from global state."
+(defn new-state
+"Creates and initializes a new map state atom.
+Sets defaults for POI type, radius, and alignment settings based on global config."
+[]
 (let [map-state (atom {:selected-poi-type @selected-poi-type
 :current-pos nil
 :current-center nil
@@ -43,16 +44,19 @@ ulocstr (l10n-str "around_me.unknown_location")]
 map-state))
 
 (defprotocol disposable-streams
-(dispose! [this] "Disposes of all streams and subscriptions.")
-(init! [this] "Initializes the position streams.")
-(location-marker-stream [this] "Returns the stream of location markers.")
-(align-position-stream [this] "Returns the stream for aligning map position.")
-(align-on-current-pos-callback [this force-position-refresh?] "Returns a callback to force alignment on current position.")
-(new-center! [this [lat lon]] "Updates the map center manually.")
-(stop-alignment! [this] "Stops the automatic alignment of map to current position."))
+"Protocol for managing map stream lifecycles."
+(dispose! [this] "Disposes of all streams and subscriptions to prevent memory leaks.")
+(init! [this] "Initializes the position and alignment streams.")
+(location-marker-stream [this] "Returns the stream of location markers for the map layer.")
+(align-position-stream [this] "Returns the stream used to trigger map re-centering.")
+(align-on-current-pos-callback [this force-position-refresh?] "Returns a callback function to center the map on the user's location.")
+(new-center! [this [lat lon]] "Manually updates the map center state (e.g. on long press).")
+(stop-alignment! [this] "Stops the automatic alignment of map to current position (e.g. on gesture)."))
 
-(defn ->state-streams [map-state]
-"Creates an implementation of disposable-streams for the given map state atom."
+(defn ->state-streams
+"Creates an implementation of disposable-streams for the given map state atom.
+Manages the lifecycle of position controllers and subscriptions."
+[map-state]
 (reify disposable-streams
 (dispose! [this]
 (let [{:keys [streamz]} @map-state
@@ -70,58 +74,58 @@ map-state))
 this)
 
 (init! [this]
-  (let [psc (new-position-stream-controller)
-        apsc (#/(async/StreamController double?))
-        ps (new-position-bstream psc)
-        lms (->location-marker-stream ps)
-        pss (subscribe-position-stream
-             ps
-             (fn [lat0 lon0]
-               (let [{:keys [current-pos]} @map-state
-                     lon (/ (.floor (* lon0 100000)) 100000) ;; round lat lon precision to 5 decimal digits
-                     lat (/ (.floor (* lat0 100000)) 100000)]
-                 (logging/d "position event from stream: " lat " " lon)
-                 (when (not= [lat lon] current-pos)
-                   (debug-notif "position fetched from stream updated: " lat " " lon)
-                  ;; swap position before refreshing pois
-                   (swap! map-state assoc :current-pos [lat lon])))))]
+(let [psc (new-position-stream-controller)
+apsc (#/(async/StreamController double?))
+ps (new-position-bstream psc)
+lms (->location-marker-stream ps)
+pss (subscribe-position-stream
+ps
+(fn [lat0 lon0]
+(let [{:keys [current-pos]} @map-state
+lon (/ (.floor (* lon0 100000)) 100000) ;; round lat lon precision to 5 decimal digits
+lat (/ (.floor (* lat0 100000)) 100000)]
+(logging/d "position event from stream: " lat " " lon)
+(when (not= [lat lon] current-pos)
+(debug-notif "position fetched from stream updated: " lat " " lon)
+;; swap position before refreshing pois
+(swap! map-state assoc :current-pos [lat lon])))))]
 
-    (swap! map-state assoc :streamz
-           {:psc psc :ps ps :apsc apsc :lms lms :pss pss}))
-  this)
+(swap! map-state assoc :streamz
+{:psc psc :ps ps :apsc apsc :lms lms :pss pss}))
+this)
 (location-marker-stream [_]
-  (let [{:keys [streamz]} @map-state
-        {:keys [lms]} streamz]
-    lms))
+(let [{:keys [streamz]} @map-state
+{:keys [lms]} streamz]
+lms))
 (align-position-stream [_]
-  (let [{:keys [streamz]} @map-state
-        {:keys [apsc]} streamz]
-    (when apsc (.-stream ^#/(async/StreamController double?) apsc))))
+(let [{:keys [streamz]} @map-state
+{:keys [apsc]} streamz]
+(when apsc (.-stream ^#/(async/StreamController double?) apsc))))
 (align-on-current-pos-callback [_ force-position-refresh?]
-  (fn []
-    (let [{:keys [streamz current-pos-as-center? align-position-on-update]} @map-state
-          {:keys [apsc psc]} streamz]
-      (when force-position-refresh?
-        (swap! map-state assoc :message "force refresh position!")
-        (logging/d "force refresh current position")
-        (let [refreshed-pos (await (force-current-position))]
-          (-> ^#/(async/StreamController geo/Position?) psc .-sink (.add ^geo/Position refreshed-pos))))
+(fn []
+(let [{:keys [streamz current-pos-as-center? align-position-on-update]} @map-state
+{:keys [apsc psc]} streamz]
+(when force-position-refresh?
+(swap! map-state assoc :message "force refresh position!")
+(logging/d "force refresh current position")
+(let [refreshed-pos (await (force-current-position))]
+(-> ^#/(async/StreamController geo/Position?) psc .-sink (.add ^geo/Position refreshed-pos))))
 
-      (logging/d "(re)align map on current position")
-      (when (or (not= align-position-on-update maploc/AlignOnUpdate.always)
-                (not current-pos-as-center?))
-        (swap! map-state assoc
-               :align-position-on-update maploc/AlignOnUpdate.always
-               :current-pos-as-center? true))
-      (when (and apsc (not (.-isClosed ^#/(async/StreamController double?) apsc)))
-        (.add ^#/(async/StreamController double?) apsc nil)))))
+(logging/d "(re)align map on current position")
+(when (or (not= align-position-on-update maploc/AlignOnUpdate.always)
+(not current-pos-as-center?))
+(swap! map-state assoc
+:align-position-on-update maploc/AlignOnUpdate.always
+:current-pos-as-center? true))
+(when (and apsc (not (.-isClosed ^#/(async/StreamController double?) apsc)))
+(.add ^#/(async/StreamController double?) apsc nil)))))
 (new-center! [_ [lat lon]]
-  (swap! map-state assoc
-         :align-position-on-update maploc/AlignOnUpdate.never
-         :current-center [lat lon]
-         :current-pos-as-center? false))
+(swap! map-state assoc
+:align-position-on-update maploc/AlignOnUpdate.never
+:current-center [lat lon]
+:current-pos-as-center? false))
 (stop-alignment! [_]
- ;; beware gestures are flooding calls
-  (let [{:keys [align-position-on-update]} @map-state]
-    (when (not= align-position-on-update maploc/AlignOnUpdate.never)
-      (swap! map-state assoc :align-position-on-update maploc/AlignOnUpdate.never))))))
+;; beware gestures are flooding calls
+(let [{:keys [align-position-on-update]} @map-state]
+(when (not= align-position-on-update maploc/AlignOnUpdate.never)
+(swap! map-state assoc :align-position-on-update maploc/AlignOnUpdate.never))))))

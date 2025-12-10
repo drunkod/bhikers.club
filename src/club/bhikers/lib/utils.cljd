@@ -1,38 +1,44 @@
 (ns club.bhikers.lib.utils
-  (:require
-   ["package:uuid/uuid.dart" :as uuid]
-   ["package:geolocator/geolocator.dart" :as geo]))
+(:require
+["package:uuid/uuid.dart" :as uuid]
+["package:geolocator/geolocator.dart" :as geo]))
+
 
 ;; UUID generation utilities
 (defonce uuidgen (atom (uuid/Uuid)))
 
-(defn uuid-v5 [url]
-  "Generate UUID v5 from URL using NAMESPACE_URL."
-  (.v5 ^uuid/Uuid @uuidgen uuid/Uuid.NAMESPACE_URL url))
+(defn uuid-v5
+"Generate UUID v5 from URL using NAMESPACE_URL."
+[url]
+(.v5 ^uuid/Uuid @uuidgen uuid/Uuid.NAMESPACE_URL url))
 
-(defn uuid-v4 []
-  "Generate random UUID v4."
-  (.v4 ^uuid/Uuid @uuidgen))
+(defn uuid-v4
+"Generate random UUID v4."
+[]
+(.v4 ^uuid/Uuid @uuidgen))
 
 ;; Type conversion utilities
-(defn str->int [s min max]
-  "Convert string to integer within range bounds.
-   Returns nil if conversion fails or out of bounds."
-  (let [num (int/tryParse s)]
-    (if (and num (< min num max)) num nil)))
+(defn str->int
+"Convert string to integer within range bounds.
+Returns nil if conversion fails or out of bounds."
+[s min max]
+(let [num (int/tryParse s)]
+(if (and num (< min num max)) num nil)))
 
-(defn str->location-accuracy [s]
-  "Convert string to LocationAccuracy enum."
-  (cond
-    (= s "low") geo/LocationAccuracy.low
-    (= s "medium") geo/LocationAccuracy.medium
-    (= s "high") geo/LocationAccuracy.high
-    :else nil))
+(defn str->location-accuracy
+"Convert string to LocationAccuracy enum."
+[s]
+(cond
+(= s "low") geo/LocationAccuracy.low
+(= s "medium") geo/LocationAccuracy.medium
+(= s "high") geo/LocationAccuracy.high
+:else nil))
 
-(defn location-accuracy->str [a]
-  "Convert LocationAccuracy enum to string."
-  (cond
-    (= a geo/LocationAccuracy.low) "low"
-    (= a geo/LocationAccuracy.medium) "medium"
-    (= a geo/LocationAccuracy.high) "high"
-    :else nil))
+(defn location-accuracy->str
+"Convert LocationAccuracy enum to string."
+[a]
+(cond
+(= a geo/LocationAccuracy.low) "low"
+(= a geo/LocationAccuracy.medium) "medium"
+(= a geo/LocationAccuracy.high) "high"
+:else nil))

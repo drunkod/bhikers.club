@@ -7,7 +7,10 @@
 
 (defn poi-type->osm-tags [type] (get poi-types->osm-tags type false))
 
-(defn overpass-item->poi [^Map item items selected-poi-type]
+(defn overpass-item->poi
+"Converts an Overpass API item to a POI map.
+Injects lat/lon for 'way' items by finding their first node."
+[^Map item items selected-poi-type]
 (.putIfAbsent item "poi-type" (fn [] selected-poi-type))
 (when (= (get item "type") "way")
 ;; finds way's first node id into items to inject lat/lon into item
@@ -21,43 +24,20 @@ items)]
 (.putIfAbsent "lon" (fn [] (get first-way-node "lon"))))))
 item)
 
-(defn fetch-pois-by-type [overpass-api t lat lon tags radius selected-poi-type]
+(defn fetch-pois-by-type
+"Fetches POIs of a specific OSM type (node/way) for given tags.
+Returns a list of POI maps."
+[overpass-api t lat lon tags radius selected-poi-type]
 (let [all-items (await (oapi/query overpass-api t lat lon tags radius))]
 (if (nil? all-items)
 nil
 (let [typed-items (filter #(= t (get % "type")) all-items)]
 (map #(overpass-item->poi % all-items selected-poi-type) typed-items)))))
 
-;; The dynamic-map-pois returns an atom of an empty list of POIs and adds
-;; a watch on the map-state.
-;;
-;; Each time an attribute of the map-state which requires to refresh the list of POIs is changed,
-;; we query the overpass api with the following logic.
-;;
-;; To properly request POIs we have to request osm objects of type "node" and also
-;; objects to type "way" because sometimes, POIs have been seeded in OSM within this
-;; type only.
-;; We ask the overpass api to filter the results with the corresponding tags we want
-;; (see poi-types->osm-tags) and within a certain radius.
-;; We then inject the poi-type in the resulting objects. (see overpass-item->poi)
-;;
-;; NOTE:
-;;
-;; To avoid long queries we partition the list of tags
-;; and make multiple queries for each type ["node", "way"] and
-;; tags partition. We update the pois atom list with each subquery's resulting items
-;; to avoid having to wait for many seconds before displaying the whole list of POIs
-;;
-;; NOTE:
-;; - osm objects of type "node" have lat and lon attrs and don't require any additional
-;; logic.
-;;
-;; - osm objects of type "way" dont have lat and lon attributes but instead a list of node ids.
-;; So when we query objects of type "way" we ask the overpass api to also return the node objects
-;; corresponding to the node ids with the special "(._;>;);" query feature.
-;; For each "way" item found, we post inject its first node's lat lon attributes before returning it
-;; (see overpass-item->poi)
-(defn dynamic-map-pois [map-state overpass-api]
+(defn dynamic-map-pois
+"Creates a reactive POI atom that updates based on map state changes.
+It manages API queries and updates the 'pois' atom accordingly."
+[map-state overpass-api]
 (let [pois (atom [])
 query-reporter (atom "")]
 (add-watch query-reporter :report-map-msg (fn [_ _ _ new-msg] (swap! map-state assoc :message new-msg)))

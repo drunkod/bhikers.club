@@ -4,10 +4,16 @@
 ["package:flutter_map/flutter_map.dart" :as fmap]
 [cljd.flutter :as f]))
 
-(defn msg [& {:keys [alignment bottom-padding]
+
+(defn msg
+"Renders a message overlay widget for the map.
+
+Options:
+:alignment - Alignment of the message box (default: bottomCenter).
+:bottom-padding - Padding from the bottom edge (default: 50.0)."
+[& {:keys [alignment bottom-padding]
 :or {alignment m/Alignment.bottomCenter
 bottom-padding 50}}]
-"Displays a message overlay on the map."
 (f/widget
 :get [:map-state]
 :watch [{:keys [message]} map-state]
@@ -24,7 +30,15 @@ bottom-padding 50}}]
 (m/Text message .overflow m/TextOverflow.ellipsis))))
 (m/Container))))
 
-(defn control-buttons [& {:keys [minZoom
+(defn control-buttons
+"Renders zoom and location control buttons (FABs).
+
+Options:
+:minZoom - Minimum zoom level (default: 1).
+:maxZoom - Maximum zoom level (default: 18).
+:onMyLocation - Callback when 'My Location' button is tapped.
+:onMyLocationSecondary - Callback on long-press/double-tap of 'My Location'."
+[& {:keys [minZoom
 maxZoom
 mini
 padding
@@ -56,7 +70,6 @@ myLocationColorIcon nil
 myLocationIcon m/Icons.my_location
 onMyLocation (fn [] nil)
 onMyLocationSecondary (fn [] (onMyLocation))}}]
-"Renders zoom and location control buttons."
 (f/widget
 :get [fmap/MapController
 fmap/MapCamera

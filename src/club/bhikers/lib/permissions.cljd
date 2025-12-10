@@ -1,43 +1,54 @@
 (ns club.bhikers.lib.permissions
-  (:require
-   ["package:permission_handler/permission_handler.dart" :as perms]
-   ["package:easy_localization/easy_localization.dart" :as l10n]
-   ["package:flutter/foundation.dart" :as foundation]
-   ["dart:io" :as io]
-   [club.bhikers.lib.notifications :refer [new-notif]]
-   [club.bhikers.lib.logging :as logging]))
+(:require
+["package:permission_handler/permission_handler.dart" :as perms]
+["package:easy_localization/easy_localization.dart" :as l10n]
+["package:flutter/foundation.dart" :as foundation]
+["dart:io" :as io]
+[club.bhikers.lib.notifications :refer [new-notif]]
+[club.bhikers.lib.logging :as logging]))
+
 
 ;; permissions helpers
 ;;
-(defn permission-request [permission granted-fn]
-  (logging/d "requesting permission " permission)
-  (let [status (await (-> permission perms/PermissionActions (.request)))]
-    (cond
-      (== perms/PermissionStatus.granted status) (granted-fn)
-      (== perms/PermissionStatus.denied status) (permission-request permission granted-fn)
-      (== perms/PermissionStatus.permanentlyDenied status) (perms/openAppSettings)
-      :else (logging/d "permission status " status " unsupported. ignoring."))))
+(defn permission-request
+"Requests a specific permission.
+If granted, executes the granted-fn callback."
+[permission granted-fn]
+(logging/d "requesting permission " permission)
+(let [status (await (-> permission perms/PermissionActions (.request)))]
+(cond
+(== perms/PermissionStatus.granted status) (granted-fn)
+(== perms/PermissionStatus.denied status) (permission-request permission granted-fn)
+(== perms/PermissionStatus.permanentlyDenied status) (perms/openAppSettings)
+:else (logging/d "permission status " status " unsupported. ignoring."))))
 
-(defn check-permission [permission granted-fn]
-  (logging/d "checking permission " permission)
-  (let [status (await (-> permission perms/PermissionActions (.-status)))]
-    (cond
-      (== perms/PermissionStatus.granted status)
-      (do
-        (logging/d "check granted for " permission)
-        (granted-fn))
-      (== perms/PermissionStatus.denied status)
-      (do
-        (logging/d "check denied for " permission)
-        (await (permission-request permission granted-fn)))
-      (== perms/PermissionStatus.permanentlyDenied status)
-      (do
-        (new-notif (str (l10n/tr "common.permission-denied") permission))
-        (perms/openAppSettings))
-      :else (logging/d "permission status " status " unsupported. ignoring?"))))
+(defn check-permission
+"Checks if a permission is granted.
+If granted, executes granted-fn.
+If denied, requests permission.
+If permanently denied, shows notification and opens app settings."
+[permission granted-fn]
+(logging/d "checking permission " permission)
+(let [status (await (-> permission perms/PermissionActions (.-status)))]
+(cond
+(== perms/PermissionStatus.granted status)
+(do
+(logging/d "check granted for " permission)
+(granted-fn))
+(== perms/PermissionStatus.denied status)
+(do
+(logging/d "check denied for " permission)
+(await (permission-request permission granted-fn)))
+(== perms/PermissionStatus.permanentlyDenied status)
+(do
+(new-notif (str (l10n/tr "common.permission-denied") permission))
+(perms/openAppSettings))
+:else (logging/d "permission status " status " unsupported. ignoring?"))))
 
-(defn check-location-permission []
-  (check-permission (if (and (not foundation/kIsWeb) io/Platform.isAndroid)
-                      perms/Permission.locationWhenInUse
-                      perms/Permission.location)
-                    #(logging/d "location perm granted!")))
+(defn check-location-permission
+"Checks/Requests location permission depending on the platform (Android/Web/iOS)."
+[]
+(check-permission (if (and (not foundation/kIsWeb) io/Platform.isAndroid)
+perms/Permission.locationWhenInUse
+perms/Permission.location)
+#(logging/d "location perm granted!")))

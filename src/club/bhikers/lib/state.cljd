@@ -1,9 +1,10 @@
 (ns club.bhikers.lib.state
-  "Runtime state atoms for the application."
-  (:require
-   ["package:flutter/foundation.dart" :refer [kDebugMode]]
-   ["package:geolocator/geolocator.dart" :as geo]
-   [club.bhikers.lib.config :as config]))
+"Runtime state atoms for the application."
+(:require
+["package:flutter/foundation.dart" :refer [kDebugMode]]
+["package:geolocator/geolocator.dart" :as geo]
+[club.bhikers.lib.config :as config]))
+
 
 ;; =============================================================================
 ;; APP STATE ATOMS
@@ -30,4 +31,8 @@
 ;; LOGIC HELPERS
 ;; =============================================================================
 
-(defn debug-mode? [] (or @force-debug-mode? kDebugMode))
+(defn debug-mode?
+"Returns true if the application is running in debug mode.
+Checks both the Flutter kDebugMode constant and the internal force-debug-mode? atom."
+[]
+(or @force-debug-mode? kDebugMode))
