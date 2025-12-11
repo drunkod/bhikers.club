@@ -1,0 +1,35 @@
+(ns club.bhikers.lib.http-test
+(:require [cljd.test :refer [deftest is testing]]
+[club.bhikers.lib.http :as http]
+["package:dio_cache_interceptor/dio_cache_interceptor.dart" :as cache]
+["package:dio/dio.dart" :as dio]))
+
+
+(deftest create-cache-store-test
+(testing "create-cache-store creates a MemCacheStore"
+(let [max-entries 10
+max-entry-size 1024
+store (http/create-cache-store max-entries max-entry-size)]
+(is (not (nil? store)))
+(is (dart/is? store cache/MemCacheStore))
+(.close store))))
+
+(deftest create-dio-instance-test
+(testing "create-dio-instance returns a Dio instance with defaults"
+(let [dio (http/create-dio-instance)]
+(is (not (nil? dio)))
+(is (dart/is? dio dio/Dio))
+(.close dio)))
+
+(testing "create-dio-instance configures base-url"
+(let [base-url "https://api.example.com"
+dio (http/create-dio-instance :base-url base-url)]
+(is (= base-url (-> dio .-options .-baseUrl)))
+(.close dio)))
+
+(testing "create-dio-instance adds cache interceptor when store provided"
+(let [store (http/create-cache-store 10 1024)
+dio (http/create-dio-instance :cache-store store)]
+(is (some #(dart/is? % cache/DioCacheInterceptor) (.-interceptors dio)))
+(.close dio)
+(.close store))))

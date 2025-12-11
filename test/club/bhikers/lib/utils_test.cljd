@@ -1,0 +1,42 @@
+(ns club.bhikers.lib.utils-test
+(:require [cljd.test :refer [deftest is testing]]
+[club.bhikers.lib.utils :as utils]
+["package:geolocator/geolocator.dart" :as geo]))
+
+(deftest str->int-test
+(testing "str->int converts valid string within bounds"
+(is (= 5 (utils/str->int "5" 0 10))))
+
+(testing "str->int returns nil for non-numeric string"
+(is (nil? (utils/str->int "abc" 0 10))))
+
+(testing "str->int returns nil for number below min"
+(is (nil? (utils/str->int "0" 0 10))))
+
+(testing "str->int returns nil for number above max"
+(is (nil? (utils/str->int "10" 0 10))))
+
+(testing "str->int returns nil for number equal to min/max (exclusive checks)"
+(is (nil? (utils/str->int "0" 0 10)))
+(is (nil? (utils/str->int "10" 0 10)))))
+
+(deftest str->location-accuracy-test
+(testing "str->location-accuracy converts valid strings"
+(is (= geo/LocationAccuracy.low (utils/str->location-accuracy "low")))
+(is (= geo/LocationAccuracy.medium (utils/str->location-accuracy "medium")))
+(is (= geo/LocationAccuracy.high (utils/str->location-accuracy "high"))))
+
+(testing "str->location-accuracy returns nil for invalid strings"
+(is (nil? (utils/str->location-accuracy "best")))
+(is (nil? (utils/str->location-accuracy "")))
+(is (nil? (utils/str->location-accuracy nil)))))
+
+(deftest location-accuracy->str-test
+(testing "location-accuracy->str converts valid enums"
+(is (= "low" (utils/location-accuracy->str geo/LocationAccuracy.low)))
+(is (= "medium" (utils/location-accuracy->str geo/LocationAccuracy.medium)))
+(is (= "high" (utils/location-accuracy->str geo/LocationAccuracy.high))))
+
+(testing "location-accuracy->str returns nil for unmapped enums"
+(is (nil? (utils/location-accuracy->str geo/LocationAccuracy.lowest)))
+(is (nil? (utils/location-accuracy->str geo/LocationAccuracy.best)))))
