@@ -1,62 +1,61 @@
 (ns club.bhikers.lib.pois-test
-(:require [cljd.test :refer [deftest is testing]]
-[club.bhikers.lib.pois :as pois]
-[club.bhikers.lib.overpassapi :as oapi]))
-
+  (:require [cljd.test :refer [deftest is testing]]
+            [club.bhikers.lib.pois :as pois]
+            [club.bhikers.lib.overpassapi :as oapi]))
 
 ;; Mock Overpass API
 (defn mock-overpass-api [return-value]
-(reify oapi/disposable-overpass-api
-(dispose! [this] this)
-(query [this type lat lon osm-tags radius]
-(Future.value return-value))))
+  (reify oapi/disposable-overpass-api
+    (dispose! [this] this)
+    (query [this type lat lon osm-tags radius]
+      (Future.value return-value))))
 
 (deftest fetch-pois-by-type-test
-(testing "fetch-pois-by-type returns mapped POIs for nodes"
-(let [mock-data [{"type" "node"
-"id" 123
-"lat" 40.0
-"lon" 10.0
-"tags" {"amenity" "cafe"}}
-{"type" "way" ;; Should be filtered out when requesting "node"
-"id" 456}]
-api (mock-overpass-api mock-data)
-result (await (pois/fetch-pois-by-type api "node" 0.0 0.0 ["amenity=cafe"] 1000 "cafe"))]
-(is (= 1 (count result)))
-(let [poi (first result)]
-(is (= "node" (get poi "type")))
-(is (= 123 (get poi "id")))
-(is (= "cafe" (get poi "poi-type"))) ;; Injected type
-(is (= 40.0 (get poi "lat")))
-(is (= 10.0 (get poi "lon"))))))
+  (testing "fetch-pois-by-type returns mapped POIs for nodes"
+    (let [mock-data [{"type" "node"
+                     "id" 123
+                     "lat" 40.0
+                     "lon" 10.0
+                     "tags" {"amenity" "cafe"}}
+                    {"type" "way" ;; Should be filtered out when requesting "node"
+                     "id" 456}]
+          api (mock-overpass-api mock-data)
+          result (await (pois/fetch-pois-by-type api "node" 0.0 0.0 ["amenity=cafe"] 1000 "cafe"))]
+      (is (= 1 (count result)))
+      (let [poi (first result)]
+        (is (= "node" (get poi "type")))
+        (is (= 123 (get poi "id")))
+        (is (= "cafe" (get poi "poi-type"))) ;; Injected type
+        (is (= 40.0 (get poi "lat")))
+        (is (= 10.0 (get poi "lon"))))))
 
-(testing "fetch-pois-by-type returns mapped POIs for ways with injected coordinates"
-(let [mock-data [{"type" "way"
-"id" 456
-"nodes" [789]
-"tags" {"building" "hotel"}}
-{"type" "node"
-"id" 789
-"lat" 41.0
-"lon" 11.0}]
-api (mock-overpass-api mock-data)
-result (await (pois/fetch-pois-by-type api "way" 0.0 0.0 ["building=hotel"] 1000 "hotel"))]
-(is (= 1 (count result)))
-(let [poi (first result)]
-(is (= "way" (get poi "type")))
-(is (= 456 (get poi "id")))
-(is (= "hotel" (get poi "poi-type")))
-;; Lat/Lon injected from node 789
-(is (= 41.0 (get poi "lat")))
-(is (= 11.0 (get poi "lon"))))))
+  (testing "fetch-pois-by-type returns mapped POIs for ways with injected coordinates"
+    (let [mock-data [{"type" "way"
+                     "id" 456
+                     "nodes" [789]
+                     "tags" {"building" "hotel"}}
+                    {"type" "node"
+                     "id" 789
+                     "lat" 41.0
+                     "lon" 11.0}]
+          api (mock-overpass-api mock-data)
+          result (await (pois/fetch-pois-by-type api "way" 0.0 0.0 ["building=hotel"] 1000 "hotel"))]
+      (is (= 1 (count result)))
+      (let [poi (first result)]
+        (is (= "way" (get poi "type")))
+        (is (= 456 (get poi "id")))
+        (is (= "hotel" (get poi "poi-type")))
+        ;; Lat/Lon injected from node 789
+        (is (= 41.0 (get poi "lat")))
+        (is (= 11.0 (get poi "lon"))))))
 
-(testing "fetch-pois-by-type returns empty list when no matching type found"
-(let [mock-data [{"type" "node" "id" 123}]
-api (mock-overpass-api mock-data)
-result (await (pois/fetch-pois-by-type api "way" 0.0 0.0 [] 1000 "any"))]
-(is (empty? result))))
+  (testing "fetch-pois-by-type returns empty list when no matching type found"
+    (let [mock-data [{"type" "node" "id" 123}]
+          api (mock-overpass-api mock-data)
+          result (await (pois/fetch-pois-by-type api "way" 0.0 0.0 [] 1000 "any"))]
+      (is (empty? result))))
 
-(testing "fetch-pois-by-type returns nil on API failure (nil response)"
-(let [api (mock-overpass-api nil)
-result (await (pois/fetch-pois-by-type api "node" 0.0 0.0 [] 1000 "any"))]
-(is (nil? result)))))
+  (testing "fetch-pois-by-type returns nil on API failure (nil response)"
+    (let [api (mock-overpass-api nil)
+          result (await (pois/fetch-pois-by-type api "node" 0.0 0.0 [] 1000 "any"))]
+      (is (nil? result)))))
