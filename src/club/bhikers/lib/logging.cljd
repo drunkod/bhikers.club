@@ -27,11 +27,25 @@ If logger is initialized, uses it; otherwise falls back to debugPrint."
 (.d ^Logger @logger msg)
 (debugPrint msg))))
 
+(defn e
+"Log an error message."
+[& args]
+(let [msg (apply str (into ["[club.bhikers] ERROR: "] args))]
+(if @logger
+(.e ^Logger @logger msg)
+(debugPrint msg))))
+
 (defn ^#/(Future File) latest-log-file
-"Returns the file handle for 'latest.log' in the log directory."
-[]
-(first (filter #(= "latest.log" (basename (.-path ^File %)))
-(.listSync (await (log-file-dir))))))
+  "Returns the most recently modified .log file in the log directory."
+  []
+  (let [dir (await (log-file-dir))
+        entities (.listSync dir)
+        ;; Filter for files ending in .log
+        log-files (filter #(and (instance? File %)
+                                (-> ^File % .-path basename (.endsWith ".log")))
+                          entities)]
+    ;; Sort by modification time descending (newest first)
+    (first (sort-by (fn [^File f] (.lastModifiedSync f)) #(compare %2 %1) log-files))))
 
 (defn init!
 "Initialize the logging system.

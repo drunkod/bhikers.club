@@ -63,9 +63,10 @@
    Returns the tester for chaining."
   [^ft/WidgetTester tester widget]
   (let [{:flds [pumpWidget pumpAndSettle]} tester]
-    (await (pumpWidget widget))
-    (await (pumpAndSettle))
-    tester))
+    (do
+      (await (pumpWidget widget))
+      (await (pumpAndSettle))
+      tester)))
 
 (defn open-drawer!
   "Opens the scaffold drawer with proper type hints to avoid dynamic warnings."
@@ -80,5 +81,6 @@
   "Taps a widget found by the given finder and settles."
   [^ft/WidgetTester tester finder]
   (let [{:flds [tap pumpAndSettle]} tester]
-    (await (tap finder))
-    (await (pumpAndSettle))))
+    (do
+      (await (tap finder))
+      (await (pumpAndSettle)))))

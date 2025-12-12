@@ -6,6 +6,7 @@
             [club.bhikers.lib.utils :refer [str->int
                                             str->location-accuracy
                                             location-accuracy->str]]
+            [club.bhikers.lib.logging :as logging]
             [club.bhikers.lib.state :refer [selected-poi-type
                                             force-debug-mode?
                                             pois-radius
@@ -55,10 +56,15 @@
      .values (into {} (map (fn [lang] [lang (l10n-str (str "settings.langs." lang))])
                            supported-locales))
      .selected default-locale
-     .onChange #(do (-> ctx
-                        l10n/BuildContextEasyLocalizationExtension
-                        (.setLocale (m/Locale %)))
-                    nil))]))
+     .onChange (fn [lang]
+                 (logging/d "Changing language to: " lang)
+                 (try
+                   (-> ctx
+                       l10n/BuildContextEasyLocalizationExtension
+                       (.setLocale (m/Locale lang)))
+                   (catch Exception e
+                     (logging/e "Failed to change language: " e)))
+                 nil))]))
 
 ;; =============================================================================
 ;; Map Settings

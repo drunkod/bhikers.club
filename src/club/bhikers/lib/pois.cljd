@@ -8,21 +8,29 @@
 (defn poi-type->osm-tags [type] (get poi-types->osm-tags type false))
 
 (defn overpass-item->poi
-"Converts an Overpass API item to a POI map.
-Injects lat/lon for 'way' items by finding their first node."
-[^Map item items selected-poi-type]
-(.putIfAbsent item "poi-type" (fn [] selected-poi-type))
-(when (= (get item "type") "way")
-;; finds way's first node id into items to inject lat/lon into item
-(when-let [first-way-node (some #(let [first-node-id (first (get item "nodes" []))]
-(when (and (not= nil first-node-id)
-(= first-node-id (get % "id")))
-%))
-items)]
-(doto item
-(.putIfAbsent "lat" (fn [] (get first-way-node "lat")))
-(.putIfAbsent "lon" (fn [] (get first-way-node "lon"))))))
-item)
+  "Converts an Overpass API item to a POI map.
+  Injects lat/lon for 'way' items by finding their first node.
+  Returns a new immutable map with the injected fields."
+  [item items selected-poi-type]
+  (let [;; Convert Dart Map to Clojure Map to support assoc/immutability
+        item (into {} item)
+        ;; Add poi-type if not present
+        with-type (if (contains? item "poi-type")
+                    item
+                    (assoc item "poi-type" selected-poi-type))]
+    ;; For 'way' items, inject lat/lon from the first node
+    (if (= (get with-type "type") "way")
+      (let [first-node-id (first (get with-type "nodes" []))
+            first-way-node (when first-node-id
+                             (some #(when (= first-node-id (get % "id")) %)
+                                   items))]
+        (cond-> with-type
+          (and first-way-node (not (contains? with-type "lat")))
+          (assoc "lat" (get first-way-node "lat"))
+
+          (and first-way-node (not (contains? with-type "lon")))
+          (assoc "lon" (get first-way-node "lon"))))
+      with-type)))
 
 (defn fetch-pois-by-type
 "Fetches POIs of a specific OSM type (node/way) for given tags.

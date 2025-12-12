@@ -8,8 +8,9 @@
 (deftest settings-title-display-test
   :tags [:widget]
   :runner (ft/testWidgets [tester])
-  (do
+  (let [^ft/WidgetTester {:flds [pumpWidget pumpAndSettle]} tester]
     (await (tu/init-test-env!))
-    (tu/pump-and-settle! tester (BhikersClubApp "/settings"))
+    (await (pumpWidget (BhikersClubApp "/settings")))
+    (await (pumpAndSettle))
     (ft/expect (ft/find.text (l10n-str "app.title"))
                  ft/findsOneWidget)))

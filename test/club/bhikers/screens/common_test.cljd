@@ -9,9 +9,16 @@
 (deftest about-version-test
   :tags [:widget]
   :runner (ft/testWidgets [tester])
-  (do
+  (let [^ft/WidgetTester {:flds [pumpWidget pumpAndSettle firstState tap]} tester]
     (await (tu/init-test-env!))
-    (tu/pump-and-settle! tester (BhikersClubApp "/settings"))
-    (tu/open-drawer! tester)
-    (tu/tap-widget! tester (ft/find.byType m/AboutListTile))
+    (await (pumpWidget (BhikersClubApp "/settings")))
+    (await (pumpAndSettle))
+    ;; Open drawer
+    (let [^m/ScaffoldState scaffold-state (#/(firstState m/ScaffoldState)
+                                          (ft/find.byType m/Scaffold))]
+      (.openDrawer scaffold-state)
+      (await (pumpAndSettle)))
+    ;; Tap AboutListTile
+    (await (tap (ft/find.byType m/AboutListTile)))
+    (await (pumpAndSettle))
     (ft/expect (ft/find.text (get @state/app-info :app-name)) ft/findsOneWidget)))

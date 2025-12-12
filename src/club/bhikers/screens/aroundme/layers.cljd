@@ -14,6 +14,7 @@ tile-layer-type]]
 [club.bhikers.lib.pois :refer [dynamic-map-pois
 poi->LatLng]]
 [club.bhikers.lib.pois.ui :refer [poi->map-location-marker]]
+[club.bhikers.lib.logging :as logging]
 [club.bhikers.screens.aroundme.ui :as ui]
 [cljd.flutter :as f]))
 
@@ -34,6 +35,7 @@ selected-server selected-tile-server]
 .maxZoom 18)
 (let [style-url (:url (get vector-tile-styles selected-server (get vector-tile-styles "protomaps")))]
 (MapLibreLayer.
+.key (m/ValueKey style-url)
 .initStyle style-url)))))
 
 ;; =============================================================================

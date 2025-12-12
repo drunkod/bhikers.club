@@ -5,10 +5,10 @@
             [club.bhikers.lib.logging :refer [latest-log-file]]
             [cljd.flutter :as f]))
 
-(defn load-log-file []
-  (let [file (await (latest-log-file))
-        file-exists? (.existsSync file)]
-    (when file-exists? (.readAsLines file))))
+(defn load-log-file [file]
+  (if (and file (.existsSync file))
+    (.readAsLines file)
+    []))
 
 (defn debuglog-screen []
   (f/widget
@@ -26,8 +26,9 @@
                                         nil)
                            .child (m/Icon m/Icons.arrow_downward))
     .body (f/widget
-           :watch [file-exists? (.exists (await (latest-log-file)))
-                   log-lines (await (load-log-file))]
+           :watch [log-file (latest-log-file)
+                   file-exists? (if log-file (.exists log-file) (Future.value false))
+                   log-lines (if log-file (load-log-file log-file) (Future.value []))]
            (if (not file-exists?)
              (m/Text (l10n-str "debuglog.no_log_file"))
              (m/Container
