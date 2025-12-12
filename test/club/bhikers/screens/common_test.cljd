@@ -1,0 +1,17 @@
+(ns club.bhikers.screens.common-test
+  (:require ["package:flutter_test/flutter_test.dart" :as ft]
+            ["package:flutter/material.dart" :as m]
+            [club.bhikers.main :refer [BhikersClubApp]]
+            [club.bhikers.lib.state :as state]
+            [club.bhikers.test-utils :as tu]
+            [cljd.test :as t :refer [deftest]]))
+
+(deftest about-version-test
+  :tags [:widget]
+  :runner (ft/testWidgets [tester])
+  (do
+    (await (tu/init-test-env!))
+    (tu/pump-and-settle! tester (BhikersClubApp "/settings"))
+    (tu/open-drawer! tester)
+    (tu/tap-widget! tester (ft/find.byType m/AboutListTile))
+    (ft/expect (ft/find.text (get @state/app-info :app-name)) ft/findsOneWidget)))

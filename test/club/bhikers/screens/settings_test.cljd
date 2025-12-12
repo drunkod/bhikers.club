@@ -1,0 +1,15 @@
+(ns club.bhikers.screens.settings-test
+  (:require ["package:flutter_test/flutter_test.dart" :as ft]
+            [club.bhikers.main :refer [BhikersClubApp]]
+            [club.bhikers.lib.i18n :refer [l10n-str]]
+            [club.bhikers.test-utils :as tu]
+            [cljd.test :as t :refer [deftest]]))
+
+(deftest settings-title-display-test
+  :tags [:widget]
+  :runner (ft/testWidgets [tester])
+  (do
+    (await (tu/init-test-env!))
+    (tu/pump-and-settle! tester (BhikersClubApp "/settings"))
+    (ft/expect (ft/find.text (l10n-str "app.title"))
+                 ft/findsOneWidget)))

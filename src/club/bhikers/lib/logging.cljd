@@ -6,7 +6,7 @@
 ["dart:io" :refer [File Directory]]
 ["package:logger/logger.dart" :refer
 [Logger AdvancedFileOutput ConsoleOutput MultiOutput
-DateTimeFormat SimplePrinter Level]]
+SimplePrinter Level]]
 
 [club.bhikers.lib.state :refer [force-debug-mode? debug-mode?]]))
 

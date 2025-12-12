@@ -2,7 +2,6 @@
   (:require
    [clojure.string :refer [replace]]
    ["package:dio/dio.dart" :as dio]
-   ["package:dio_cache_interceptor/dio_cache_interceptor.dart" :as cache]
    [club.bhikers.lib.http :refer [create-cache-store
                                   create-dio-instance]]
    [club.bhikers.lib.notifications :refer [debug-notif]]

@@ -1,17 +1,13 @@
 (ns club.bhikers.lib.app
-  (:require ["package:flutter_settings_screens/flutter_settings_screens.dart" :refer [Settings]]
-            ["package:shared_preferences/shared_preferences.dart" :refer [SharedPreferences]]
+  (:require ["package:flutter_settings_screens/flutter_settings_screens.dart" :refer [Settings] :as settings]
             ["package:flutter/material.dart" :as m]
             ["package:package_info_plus/package_info_plus.dart" :refer [PackageInfo]]
-            ["package:flutter_settings_screens/flutter_settings_screens.dart" :as settings]
             ["package:easy_localization/easy_localization.dart" :as l10n]
             [club.bhikers.lib.config :as config]
             [club.bhikers.lib.state :as state]
             [club.bhikers.lib.utils :refer [str->location-accuracy]]))
 
 (defn init! [& {:keys [mock-mode?] :or {mock-mode? false}}]
-  (when mock-mode? (-> SharedPreferences (.setMockInitialValues {})))
-
   (m/WidgetsFlutterBinding.ensureInitialized)
   (settings/Settings.init .cacheProvider (settings/SharePreferenceCache))
   (await (l10n/EasyLocalization.ensureInitialized))

@@ -1,0 +1,26 @@
+(ns club.bhikers.lib.state-test
+  (:require [cljd.test :refer [deftest is testing]]
+            [club.bhikers.lib.state :as state]
+            ["package:flutter/foundation.dart" :as f]))
+
+(deftest debug-mode-test
+  (testing "debug-mode? returns true when force-debug-mode? is true"
+    (reset! state/force-debug-mode? true)
+    (is (true? (state/debug-mode?))))
+
+  (testing "debug-mode? returns true when kDebugMode is true"
+    (reset! state/force-debug-mode? false)
+    ;; We can't easily mock kDebugMode since it's a const,
+    ;; but we can verify the OR logic if we assume kDebugMode is false in test env usually,
+    ;; or we rely on force-debug-mode? being effective.
+    ;; Ideally we would check if (or @force-debug-mode? kDebugMode) works.
+    ;; Since we can't change kDebugMode, we just test the atom part.
+    (is (= f/kDebugMode (state/debug-mode?)))))
+
+(deftest initial-state-test
+  (testing "Default values are correct"
+    (is (= "sandwich" @state/selected-poi-type))
+    (is (= "osm" @state/selected-tile-server))
+    (is (= :raster @state/tile-layer-type))
+    (is (= 3 @state/api-query-timeout))
+    (is (= 1000 @state/pois-radius))))

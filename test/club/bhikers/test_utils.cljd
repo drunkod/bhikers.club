@@ -1,0 +1,84 @@
+(ns club.bhikers.test-utils
+  (:require ["package:flutter/material.dart" :as m]
+            ["package:flutter_test/flutter_test.dart" :as ft]
+            ["package:shared_preferences/shared_preferences.dart" :refer [SharedPreferences]]
+            ["package:easy_localization/easy_localization.dart" :as l10n]
+            ["package:easy_localization_loader/easy_localization_loader.dart" :as l10nassets]
+            [club.bhikers.lib.app :as app]
+            [club.bhikers.lib.logging :as logging]
+            [club.bhikers.lib.overpassapi :as oapi]
+            [cljd.flutter :as f]))
+
+;; ============================================
+;; Test Environment Initialization
+;; ============================================
+
+(defn init-test-env!
+  "Initializes the Flutter test binding and mock systems.
+   Must be called before any widget test."
+  []
+  (m/WidgetsFlutterBinding.ensureInitialized)
+  (-> SharedPreferences (.setMockInitialValues {}))
+  (await (logging/init! :mock-mode? true))
+  (await (app/init! :mock-mode? true)))
+
+;; ============================================
+;; Mock Factories
+;; ============================================
+
+(defn mock-overpass-api
+  "Creates a mock Overpass API that returns the given data."
+  [return-value]
+  (reify oapi/disposable-overpass-api
+    (dispose! [_] nil)
+    (query [_ _ _ _ _ _]
+      (Future.value return-value))))
+
+;; ============================================
+;; Widget Test Helpers
+;; ============================================
+
+(defn with-test-app
+  "Wraps a widget for testing with optional dependency overrides.
+   Includes EasyLocalization setup for widgets that require translations.
+
+   Usage:
+   (with-test-app (MyWidget) :overrides {:overpass-api mock-api})
+
+   Note: When testing with BhikersClubApp, localization is already included,
+   so this wrapper is mainly for testing individual screens in isolation."
+  [widget & {:keys [overrides] :or {overrides {}}}]
+  (f/widget
+    :bind overrides
+    (l10n/EasyLocalization
+      .supportedLocales [(m/Locale "en")]
+      .path "src/resources/langs"
+      .fallbackLocale (m/Locale "en")
+      .assetLoader (l10nassets/YamlAssetLoader)
+      .useOnlyLangCode true)
+    (m/MaterialApp .home widget)))
+
+(defn pump-and-settle!
+  "Pumps a widget and waits for all animations to settle.
+   Returns the tester for chaining."
+  [^ft/WidgetTester tester widget]
+  (let [{:flds [pumpWidget pumpAndSettle]} tester]
+    (await (pumpWidget widget))
+    (await (pumpAndSettle))
+    tester))
+
+(defn open-drawer!
+  "Opens the scaffold drawer with proper type hints to avoid dynamic warnings."
+  [^ft/WidgetTester tester]
+  (let [{:flds [firstState pumpAndSettle]} tester
+        ^m/ScaffoldState scaffold-state (#/(firstState m/ScaffoldState)
+                                          (ft/find.byType m/Scaffold))]
+    (.openDrawer scaffold-state)
+    (await (pumpAndSettle))))
+
+(defn tap-widget!
+  "Taps a widget found by the given finder and settles."
+  [^ft/WidgetTester tester finder]
+  (let [{:flds [tap pumpAndSettle]} tester]
+    (await (tap finder))
+    (await (pumpAndSettle))))

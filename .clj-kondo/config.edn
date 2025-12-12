@@ -1,0 +1,33 @@
+{:lint-as {cljd.test/deftest clojure.test/deftest
+            cljd.test/is clojure.test/is
+            cljd.test/testing clojure.test/testing
+            cljd.flutter/widget clojure.core/->}
+ :config-paths ["test"]
+ :linters {:unresolved-symbol {:exclude [(cljd.flutter/run) (cljd.flutter/widget)
+                                         ;; Exclude common Flutter/Dart symbols that might be flagged
+                                         (m/WidgetsFlutterBinding.ensureInitialized)
+                                         (l10n/EasyLocalization.ensureInitialized)
+                                         (settings/Settings.init)
+                                         (settings/SharePreferenceCache)
+                                         (Future.value)
+                                         (String.fromEnvironment)
+                                         (int.tryParse)
+                                         (Duration)
+                                         (Uri.parse)
+                                         (m/Locale)
+                                         (m/MaterialApp)
+                                         (m/Scaffold)
+                                         (m/Text)
+                                         (m/Icon)
+                                         (m/AboutListTile)
+                                         (ft/find.byType)
+                                         (ft/find.text)
+                                         (ft/testWidgets)
+                                         (tu/init-test-env!)
+                                         (tu/pump-and-settle!)
+                                         (tu/open-drawer!)
+                                         (tu/tap-widget!)
+                                         (club.bhikers.main/BhikersClubApp)]}
+           :unresolved-namespace {:exclude [dart]}
+           :keyword-binding {:level :off} ;; suppress :bind error in widget macro
+           :invalid-arity {:level :off}}} ;; suppress potential arity issues with dart interop

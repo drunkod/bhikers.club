@@ -7,8 +7,7 @@
 ["package:url_launcher/link.dart" :as link]
 [cljd.flutter :as f]
 [club.bhikers.lib.config :refer [osm-tags->icons]]
-[club.bhikers.lib.i18n :refer [l10n-str]]
-[club.bhikers.lib.logging :as logging]))
+[club.bhikers.lib.i18n :refer [l10n-str]]))
 
 
 (defn osm-tag->icon [[type value]]

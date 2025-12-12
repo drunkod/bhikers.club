@@ -1,0 +1,34 @@
+(ns club.bhikers.lib.config-test
+  (:require [cljd.test :refer [deftest is testing]]
+            [club.bhikers.lib.config :as config]))
+
+(deftest config-constants-test
+  (testing "Default locale is supported"
+    (is (some #(= config/default-locale %) config/supported-locales)))
+
+  (testing "Default POI type is supported"
+    (is (some #(= config/default-poi-type %) config/supported-poi-types)))
+
+  (testing "POI radius bounds are logical"
+    (is (< config/min-pois-radius config/max-pois-radius))))
+
+(deftest poi-tags-test
+  (testing "All supported POI types have OSM tags defined"
+    (doseq [type config/supported-poi-types]
+      (is (contains? config/poi-types->osm-tags type)
+          (str "Missing tags for POI type: " type))
+      (is (not-empty (get config/poi-types->osm-tags type))))))
+
+(deftest tile-servers-test
+  (testing "Raster tile servers have names and urls"
+    (doseq [[key val] config/raster-tile-servers]
+      (is (string? (:name val)))
+      (is (string? (:url val)))
+      (is (re-find #"\{z\}" (:url val)))
+      (is (re-find #"\{x\}" (:url val)))
+      (is (re-find #"\{y\}" (:url val)))))
+
+  (testing "Vector tile styles have names and urls"
+    (doseq [[key val] config/vector-tile-styles]
+      (is (string? (:name val)))
+      (is (string? (:url val))))))
