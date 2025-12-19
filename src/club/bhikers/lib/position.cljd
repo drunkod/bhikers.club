@@ -86,7 +86,7 @@
                                                       (when (not (.-isClosed stream-controller))
                                                         (logging/d "new position, add to stream controller sink: " position)
                                                         (-> stream-controller .-sink (.add position)))))))]
-                      (when last-known-position
+                      (when (and last-known-position (not (.-isClosed stream-controller)))
                         (logging/d "add last-known-position to stream controller sink: " last-known-position)
                         (-> stream-controller .-sink (.add last-known-position)))
                       (when status-stream-subscription (swap! cancel-functions conj #(.cancel status-stream-subscription)))

@@ -16,7 +16,6 @@ vertouplage]]
 [club.bhikers.screens.aroundme.layers :as layers]
 [cljd.flutter :as f]))
 
-
 ;; Around me ( +/- 10/20km): POIs*
 
 (defn around-me-screen []
