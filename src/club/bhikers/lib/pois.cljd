@@ -5,6 +5,10 @@
 [club.bhikers.lib.logging :as logging]
 [club.bhikers.lib.overpassapi :as oapi]))
 
+;; Persistent cache for POI query parameters - survives widget rebuilds
+;; Prevents unnecessary API calls during language changes
+(def ^:private last-poi-query-params (atom nil))
+
 (defn poi-type->osm-tags [type] (get poi-types->osm-tags type false))
 
 (defn overpass-item->poi
@@ -49,29 +53,37 @@ It manages API queries and updates the 'pois' atom accordingly."
 (let [pois (atom [])
 query-reporter (atom "")]
 (add-watch query-reporter :report-map-msg (fn [_ _ _ new-msg] (swap! map-state assoc :message new-msg)))
-(add-watch map-state :refresh-pois
-(fn [_ _ old-state new-state]
-(when (not= (select-keys old-state [:radius :selected-poi-type :current-pos :current-center :current-pos-as-center?])
-(select-keys new-state [:radius :selected-poi-type :current-pos :current-center :current-pos-as-center?]))
-(logging/d "refreshing pois!")
-(let [{:keys [radius selected-poi-type current-pos current-center current-pos-as-center?]} new-state
-[lat lon] (if (and current-pos-as-center? current-pos) current-pos current-center)
-osm-tags (poi-type->osm-tags selected-poi-type)]
-(when (or (and current-pos-as-center? current-pos) current-center)
-(reset! pois [])
-(doseq [t ["node" "way"]
-tags (partition-all 2 osm-tags)]
-(reset! query-reporter (str "fetch:" t tags))
-(let [_pois (await (fetch-pois-by-type overpass-api t lat lon tags radius selected-poi-type))]
-(cond
-(nil? _pois)
-(reset! query-reporter (str "FAILED! " t tags))
-(empty? _pois)
-(logging/d "no pois fetched! map-state was: " new-state)
-:else
-(do (logging/d "adding " (count _pois) " pois fetched!")
-(swap! pois into _pois)))))
-(reset! query-reporter (str "fetched " (count @pois) " pois.")))))))
+    (add-watch map-state :refresh-pois
+      (fn [_ _ old-state new-state]
+        (when (not= (select-keys old-state [:radius :selected-poi-type :current-pos :current-center :current-pos-as-center?])
+                    (select-keys new-state [:radius :selected-poi-type :current-pos :current-center :current-pos-as-center?]))
+          (let [{:keys [radius selected-poi-type current-pos current-center current-pos-as-center?]} new-state
+                [lat lon] (if (and current-pos-as-center? current-pos) current-pos current-center)
+                osm-tags (poi-type->osm-tags selected-poi-type)
+                ;; Build query params to check against cache
+                query-params {:lat lat :lon lon :radius radius :selected-poi-type selected-poi-type}]
+            (when (or (and current-pos-as-center? current-pos) current-center)
+              ;; Skip refresh if query params match cached values (e.g. after language change rebuild)
+              (if (= query-params @last-poi-query-params)
+                (logging/d "skipping pois refresh - params unchanged (likely language change rebuild)")
+                (do
+                  (logging/d "refreshing pois!")
+                  (reset! last-poi-query-params query-params)
+                  (reset! pois [])
+                  (doseq [t ["node" "way"]
+                          tags (partition-all 2 osm-tags)]
+                    (reset! query-reporter (str "fetch:" t tags))
+                    (let [_pois (await (fetch-pois-by-type overpass-api t lat lon tags radius selected-poi-type))]
+                      (cond
+                        (nil? _pois)
+                        (reset! query-reporter (str "FAILED! " t tags))
+                        (empty? _pois)
+                        (logging/d "no pois fetched! map-state was: " new-state)
+                        :else
+                        (do (logging/d "adding " (count _pois) " pois fetched!")
+                            (swap! pois into _pois)))))
+                  (reset! query-reporter (str "fetched " (count @pois) " pois.")))))))))
+
 
 pois))
 
