@@ -7,6 +7,7 @@
 [club.bhikers.lib.config :refer [icicommencelaventure
 vertouplage]]
 [club.bhikers.lib.state :refer [debug-mode?]]
+[club.bhikers.lib.logging :as logging]
 [club.bhikers.lib.map.state :as map-state]
 [club.bhikers.lib.map.widgets :as map-widgets]
 [club.bhikers.screens.common.appbar :refer [app-bar]]
@@ -14,6 +15,7 @@ vertouplage]]
 ;; Imported Modules
 [club.bhikers.screens.aroundme.ui :as ui]
 [club.bhikers.screens.aroundme.layers :as layers]
+[club.bhikers.screens.common.location-service-popup :refer [show-location-service-dialog]]
 [cljd.flutter :as f]))
 
 ;; Around me ( +/- 10/20km): POIs*
@@ -22,8 +24,32 @@ vertouplage]]
 (f/widget
 :let [scaffold-key (#/(m/GlobalKey m/ScaffoldState))]
 :bind {:map-state (map-state/new-state)}
+:context ctx
 :get [:map-state m/Theme]
 :managed [dms (-> map-state map-state/->state-streams map-state/init!) :dispose map-state/dispose!]
+:let [watcher-key (keyword (str "error-watcher-" (hash ctx)))]
+:managed [_ (let [handle-error (fn [err]
+                                 (logging/d "handling error: " err " type: " (.-runtimeType err))
+                                 (when (or (instance? maploc/ServiceDisabledException err)
+                                           (instance? maploc/PermissionDeniedException err))
+                                   (logging/d "showing location service/permission dialog")
+                                   (.addPostFrameCallback m/WidgetsBinding.instance
+                                                          (fn [_]
+                                                            (show-location-service-dialog ctx)
+                                                            (swap! map-state assoc :error nil)
+                                                            nil))
+                                   nil))]
+              (add-watch map-state watcher-key
+                         (fn [_ _ old-s new-s]
+                           (let [err (:error new-s)]
+                             (when (and (nil? (:error old-s)) err)
+                               (handle-error err)))))
+              ;; Check initial state in case error happened before watcher key was added
+              (when-let [err (:error @map-state)]
+                (logging/d "initial error detected: " err)
+                (handle-error err))
+              watcher-key)
+          :dispose nil]
 :watch [{:keys [align-position-on-update current-pos-as-center? current-center]} map-state]
 (m/Scaffold
 .key scaffold-key

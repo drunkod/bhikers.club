@@ -42,6 +42,7 @@ around_me:
   screen_title: Intorno a me
   description: Punti di interesse intorno alla mia posizione GPS attuale
   no_permission: Si prega di concedere l'autorizzazione alla posizione
+  location_service_disabled: Please enable location services on device
   unknown_location: Posizione attuale sconosciuta...
   poi_types:
     shelter: Rifugi
@@ -60,6 +61,7 @@ common:
   close: Chiudi
   radius: Raggio di ricerca
   permission-denied: autorizzazione permanentemente negata per
+  open_settings: Open Settings
 notifications:
   title: Notifiche
 debuglog:

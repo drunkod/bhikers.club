@@ -55,7 +55,7 @@
                       (== permission geo/LocationPermission.deniedForever))
                   (when (not (.-isClosed stream-controller))
                     (logging/d "permission denied, closing stream controller")
-                    (-> stream-controller .-sink (.addError maploc/PermissionDeniedException))
+                    (-> stream-controller .-sink (.addError (maploc/PermissionDeniedException.)))
                     (await (.close stream-controller)))
                   ;; main clause: perm ok: check services and subscribe
                   (or (== permission geo/LocationPermission.whileInUse)
@@ -71,7 +71,7 @@
                                                           (if (not= status geo/ServiceStatus.enabled)
                                                             (do
                                                               (logging/d "service status is disabled. error.")
-                                                              (-> stream-controller .-sink (.addError maploc/ServiceDisabledException)))
+                                                              (-> stream-controller .-sink (.addError (maploc/ServiceDisabledException.))))
                                                             (-> stream-controller .-sink (.add nil))))))
                           last-known-position (when (and service-enabled? (not foundation/kIsWeb))
                                                 (logging/d "await for last known position")
@@ -85,14 +85,18 @@
                                                     (fn [position]
                                                       (when (not (.-isClosed stream-controller))
                                                         (logging/d "new position, add to stream controller sink: " position)
-                                                        (-> stream-controller .-sink (.add position)))))))]
+                                                        (-> stream-controller .-sink (.add position))))
+                                                    .onError (fn [err]
+                                                               (logging/d "position stream error from geolocator: " err)
+                                                               (when (not (.-isClosed stream-controller))
+                                                                 (-> stream-controller .-sink (.addError (maploc/ServiceDisabledException.))))))))]
                       (when (and last-known-position (not (.-isClosed stream-controller)))
                         (logging/d "add last-known-position to stream controller sink: " last-known-position)
                         (-> stream-controller .-sink (.add last-known-position)))
                       (when status-stream-subscription (swap! cancel-functions conj #(.cancel status-stream-subscription)))
                       (when position-subscription (swap! cancel-functions conj #(.cancel position-subscription)))))
 
-                  :else (-> stream-controller .-sink (.addError maploc/IncorrectSetupException))))]
+                  :else (-> stream-controller .-sink (.addError (maploc/IncorrectSetupException.)))))]
 
     (doto stream-controller
       (.-onCancel!
@@ -146,8 +150,10 @@
                       .accuracy (.-accuracy position))))))
 
 (defn subscribe-position-stream ^#/(async/StreamSubscription geo/Position?)
-  [^#/(async/Stream geo/Position?) stream listener]
+  [^#/(async/Stream geo/Position?) stream listener & {:keys [on-error]}]
   (logging/d "subscribe to position stream")
-  (.listen stream (fn [^geo/Position? position]
-                    (listener (.-latitude position)
-                              (.-longitude position)))))
+  (.listen stream
+           (fn [^geo/Position? position]
+             (listener (.-latitude position)
+                       (.-longitude position)))
+           .onError on-error))

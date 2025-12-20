@@ -1,0 +1,24 @@
+(ns club.bhikers.screens.common.location-service-popup
+  (:require ["package:flutter/material.dart" :as m]
+            ["package:permission_handler/permission_handler.dart" :as perms]
+            [club.bhikers.lib.i18n :refer [l10n-str]]
+            [cljd.flutter :as f]))
+
+(defn show-location-service-dialog [ctx]
+  (m/showDialog
+   .context ctx
+   .builder (f/build
+             (m/AlertDialog
+              .title (m/Text (l10n-str "around_me.screen_title"))
+              .content (m/Text (l10n-str "around_me.location_service_disabled"))
+              .actions [(m/TextButton
+                         .onPressed (fn []
+                                      (.pop (m/Navigator.of ctx))
+                                      nil)
+                         .child (m/Text (l10n-str "common.close")))
+                        (m/TextButton
+                         .onPressed (fn []
+                                      (perms/openAppSettings)
+                                      (.pop (m/Navigator.of ctx))
+                                      nil)
+                         .child (m/Text (l10n-str "common.open_settings")))]))))

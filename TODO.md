@@ -29,6 +29,38 @@
 
 - [+] Fix stream controller lifecycle in `src/club/bhikers/lib/position.cljd:185`
 - [ ] Add location service disabled popup with message "Please enable location services on device"
+  > **Architecture Reference**: [Location-Service-Disabled-Popup-Implementation---Current-Architecture.md](Location-Service-Disabled-Popup-Implementation---Current-Architecture.md)
+  
+  **Implementation Steps:**
+  - [ ] **1. Localization**: Add translation keys to all language files
+    - Add `around_me.location_service_disabled: Please enable location services on device` to:
+      - `assets/l10n/en.yaml`
+      - `assets/l10n/fr.yaml`, `de.yaml`, `it.yaml`, `es.yaml`, `ru.yaml`
+    - Add `common.open_settings: Open Settings` button text
+  
+  - [ ] **2. Popup Component**: Create reusable popup widget
+    - File: `src/club/bhikers/screens/common/location_service_popup.cljd`
+    - Use `m/showDialog` or `m/showModalBottomSheet` pattern (see [2b] in arch doc)
+    - Include "Open Settings" button calling `perms/openAppSettings` (see [3d])
+    - Display localized message using `l10n-str` helper (see [4b])
+  
+  - [ ] **3. Error Handler**: Catch `ServiceDisabledException` from position stream
+    - File: `src/club/bhikers/lib/map/state.cljd:87` (see [1b])
+    - Add `.onError` handler to position stream subscription
+    - Check for `maploc/ServiceDisabledException` error type
+    - Call popup function with `BuildContext` when error detected
+  
+  - [ ] **4. Integration**: Wire popup to AroundMe screen
+    - File: `src/club/bhikers/screens/aroundme.cljd`
+    - Ensure `BuildContext` is available for popup display (see [2a])
+    - Handle initial service disabled state on screen mount
+    - Handle service disabled during active session (via stream listener [1d])
+  
+  **Key Files Changed:**
+  - `assets/l10n/*.yaml` - Translation strings
+  - `src/club/bhikers/screens/common/location_service_popup.cljd` [NEW]
+  - `src/club/bhikers/lib/map/state.cljd` - Error handling in position stream
+  - `src/club/bhikers/screens/aroundme.cljd` - Integration
 - [ ] Add missing localization keys: `edit-everydoor`, `route-to-poi`
 
 ## Medium Priority

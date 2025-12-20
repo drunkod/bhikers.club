@@ -26,7 +26,8 @@ Sets defaults for POI type, radius, and alignment settings based on global confi
 :current-pos-as-center? true
 :transient-radius @pois-radius
 :radius @pois-radius
-:align-position-on-update maploc/AlignOnUpdate.always})]
+:align-position-on-update maploc/AlignOnUpdate.always
+:error nil})]
 (when (debug-mode?)
 (add-watch
 map-state :map-message
@@ -93,8 +94,11 @@ lat (/ (.floor (* lat0 100000)) 100000)]
 (logging/d "position event from stream: " lat " " lon)
 (when (and @mounted-state (not= [lat lon] current-pos))
 (debug-notif "position fetched from stream updated: " lat " " lon)
-;; swap position before refreshing pois
-(swap! map-state assoc :current-pos [lat lon])))))]
+;; swap position before refreshing
+(swap! map-state assoc :current-pos [lat lon]))))
+:on-error (fn [err]
+(logging/d "position stream error: " err)
+(swap! map-state assoc :error err)))]
 
 (swap! map-state assoc :streamz
 {:psc psc :ps ps :apsc apsc :lms lms :pss pss}))

@@ -1,0 +1,140 @@
+(ns club.bhikers.screens.location-service-popup-test
+  (:require ["package:flutter_test/flutter_test.dart" :as ft]
+            ["package:flutter/material.dart" :as m]
+            ["package:flutter_map_location_marker/flutter_map_location_marker.dart" :as maploc]
+            [club.bhikers.screens.common.location-service-popup :refer [show-location-service-dialog]]
+            [club.bhikers.test-utils :as tu]
+            [cljd.test :as t :refer [deftest is testing]]
+            [cljd.flutter :as f]))
+
+(deftest location-service-popup-appearance
+  :tags [:widget]
+  :runner (ft/testWidgets [tester])
+  (await (tu/init-test-env!))
+  (await (.pumpWidget tester
+          (tu/with-test-app
+            (f/widget
+              :context ctx
+              (m/ElevatedButton
+               .onPressed #(show-location-service-dialog ctx)
+               .child (m/Text "Show Popup"))))))
+  (await (.pumpAndSettle tester))
+
+  (await (.tap tester (.text ft/find "Show Popup")))
+  (await (.pumpAndSettle tester))
+
+  (ft/expect (.byType ft/find m/AlertDialog) ft/findsOneWidget)
+  (ft/expect (ft/find.byWidgetPredicate
+              (fn [widget]
+                (and (dart:core/identical? (.-runtimeType widget) m/Text)
+                     (or (= (.-data ^m/Text widget) "Around me")
+                         (= (.-data ^m/Text widget) "around_me.screen_title")))))
+             ft/findsOneWidget))
+
+(deftest location-service-popup-has-close-button
+  :tags [:widget]
+  :runner (ft/testWidgets [tester])
+  (await (tu/init-test-env!))
+  (await (.pumpWidget tester
+          (tu/with-test-app
+            (f/widget
+              :context ctx
+              (m/ElevatedButton
+               .onPressed #(show-location-service-dialog ctx)
+               .child (m/Text "Show Popup"))))))
+  (await (.pumpAndSettle tester))
+
+  (await (.tap tester (.text ft/find "Show Popup")))
+  (await (.pumpAndSettle tester))
+
+  (ft/expect (.byType ft/find m/AlertDialog) ft/findsOneWidget)
+  (ft/expect (ft/find.byWidgetPredicate
+              (fn [widget]
+                (and (dart:core/identical? (.-runtimeType widget) m/Text)
+                     (or (= (.-data ^m/Text widget) "Close")
+                         (= (.-data ^m/Text widget) "common.close")))))
+             ft/findsOneWidget))
+
+(deftest location-service-popup-has-settings-button
+  :tags [:widget]
+  :runner (ft/testWidgets [tester])
+  (await (tu/init-test-env!))
+  (await (.pumpWidget tester
+          (tu/with-test-app
+            (f/widget
+              :context ctx
+              (m/ElevatedButton
+               .onPressed #(show-location-service-dialog ctx)
+               .child (m/Text "Show Popup"))))))
+  (await (.pumpAndSettle tester))
+
+  (await (.tap tester (.text ft/find "Show Popup")))
+  (await (.pumpAndSettle tester))
+
+  (ft/expect (.byType ft/find m/AlertDialog) ft/findsOneWidget)
+  (ft/expect (ft/find.byWidgetPredicate
+              (fn [widget]
+                (and (dart:core/identical? (.-runtimeType widget) m/Text)
+                     (or (= (.-data ^m/Text widget) "Open Settings")
+                         (= (.-data ^m/Text widget) "common.open_settings")))))
+             ft/findsOneWidget))
+
+(deftest location-service-popup-shows-disabled-message
+  :tags [:widget]
+  :runner (ft/testWidgets [tester])
+  (await (tu/init-test-env!))
+  (await (.pumpWidget tester
+          (tu/with-test-app
+            (f/widget
+              :context ctx
+              (m/ElevatedButton
+               .onPressed #(show-location-service-dialog ctx)
+               .child (m/Text "Show Popup"))))))
+  (await (.pumpAndSettle tester))
+
+  (await (.tap tester (.text ft/find "Show Popup")))
+  (await (.pumpAndSettle tester))
+
+  (ft/expect (.byType ft/find m/AlertDialog) ft/findsOneWidget)
+  (ft/expect (ft/find.byWidgetPredicate
+              (fn [widget]
+                (and (dart:core/identical? (.-runtimeType widget) m/Text)
+                     (or (= (.-data ^m/Text widget) "Please enable location services on device")
+                         (= (.-data ^m/Text widget) "around_me.location_service_disabled")))))
+             ft/findsOneWidget))
+
+(deftest location-service-popup-close-dismisses-dialog
+  :tags [:widget]
+  :runner (ft/testWidgets [tester])
+  (await (tu/init-test-env!))
+  (await (.pumpWidget tester
+          (tu/with-test-app
+            (f/widget
+              :context ctx
+              (m/ElevatedButton
+               .onPressed #(show-location-service-dialog ctx)
+               .child (m/Text "Show Popup"))))))
+  (await (.pumpAndSettle tester))
+
+  (await (.tap tester (.text ft/find "Show Popup")))
+  (await (.pumpAndSettle tester))
+  (ft/expect (.byType ft/find m/AlertDialog) ft/findsOneWidget)
+
+  (await (.tap tester (ft/find.byWidgetPredicate
+                       (fn [widget]
+                         (and (dart:core/identical? (.-runtimeType widget) m/Text)
+                              (or (= (.-data ^m/Text widget) "Close")
+                                  (= (.-data ^m/Text widget) "common.close")))))))
+  (await (.pumpAndSettle tester))
+
+  (ft/expect (.byType ft/find m/AlertDialog) ft/findsNothing))
+
+(deftest service-disabled-exception-is-instance
+  (testing "ServiceDisabledException can be instantiated"
+    (let [exc (maploc/ServiceDisabledException.)]
+      (is (instance? maploc/ServiceDisabledException exc)))))
+
+(deftest permission-denied-exception-is-instance
+  (testing "PermissionDeniedException can be instantiated"
+    (let [exc (maploc/PermissionDeniedException.)]
+      (is (instance? maploc/PermissionDeniedException exc)))))

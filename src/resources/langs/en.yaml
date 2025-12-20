@@ -42,6 +42,7 @@ around_me:
   screen_title: Around me
   description: POIs around my current GPS position
   no_permission: Please grant Location permission
+  location_service_disabled: Please enable location services on device
   unknown_location: Current location unknown...
   poi_types:
     shelter: Shelters
@@ -69,6 +70,7 @@ about:
 common:
   close: Close
   permission-denied: permission permanently denied for
+  open_settings: Open Settings
   shelter_emoji: ☔
   hotel_emoji: 🛏️
   campsite_emoji: ⛺
