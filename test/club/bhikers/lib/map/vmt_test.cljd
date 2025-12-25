@@ -1,0 +1,26 @@
+(ns club.bhikers.lib.map.vmt-test
+  (:require [clojure.string :as str]
+            [cljd.test :refer [deftest is testing]]
+            [club.bhikers.lib.map.vmt :as vmt]
+            [club.bhikers.lib.state :as state]))
+
+(deftest build-style-uri-test
+  (testing "build-style-uri replaces {key} with API key"
+    (reset! state/vmt-api-keys {:stadia "test-key"})
+    (let [uri (vmt/build-style-uri "stadia-alidade")]
+      (is (str/includes? uri "test-key"))
+      (is (not (str/includes? uri "{key}")))))
+  
+  (testing "build-style-uri returns nil when API key missing"
+    (reset! state/vmt-api-keys {:stadia nil})
+    (is (nil? (vmt/build-style-uri "stadia-alidade")))))
+
+(deftest style-ready-test
+  (testing "style-ready? returns false when no style loaded"
+    (reset! state/vmt-style nil)
+    (is (false? (vmt/style-ready?))))
+  
+  (testing "style-ready? returns true when style is loaded"
+    (reset! state/vmt-style {:dummy "style"})
+    (is (true? (vmt/style-ready?)))
+    (reset! state/vmt-style nil)))

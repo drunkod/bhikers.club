@@ -13,6 +13,8 @@ settings:
   tile_layer_type: Tipo de capa de teselas
   tile_layer_raster: Raster
   tile_layer_vector: Vector
+  vector_engine: "Motor de renderizado vectorial"
+  api_keys_title: "Claves API"
   advanced_group_title: Avanzado
   api_query_timeout: Tiempo de espera de consulta de api (en segundos)
   timeout_input_validation_error: El tiempo de espera debe ser un entero válido tal que 2 < tiempo de espera < 10
@@ -42,7 +44,7 @@ around_me:
   screen_title: Alrededor de mí
   description: Puntos de interés alrededor de mi posición GPS actual
   no_permission: Por favor, conceda permiso de ubicación
-  location_service_disabled: Please enable location services on device
+  location_service_disabled: Por favor, active los servicios de ubicación en el dispositivo
   unknown_location: Ubicación actual desconocida...
   poi_types:
     shelter: Refugios
@@ -61,7 +63,7 @@ common:
   close: Cerrar
   radius: Radio de búsqueda
   permission-denied: permiso denegado permanentemente para
-  open_settings: Open Settings
+  open_settings: Abrir configuración
 notifications:
   title: Notificaciones
 debuglog:

@@ -1,5 +1,6 @@
 (ns club.bhikers.lib.config-test
-  (:require [cljd.test :refer [deftest is testing]]
+  (:require [clojure.string :as str]
+            [cljd.test :refer [deftest is testing]]
             [club.bhikers.lib.config :as config]))
 
 (deftest config-constants-test
@@ -28,7 +29,14 @@
       (is (re-find #"\{x\}" (:url val)))
       (is (re-find #"\{y\}" (:url val)))))
 
-  (testing "Vector tile styles have names and urls"
-    (doseq [[key val] config/vector-tile-styles]
+  (testing "MapLibre vector styles have names and urls"
+    (doseq [[_ val] config/maplibre-vector-styles]
       (is (string? (:name val)))
-      (is (string? (:url val))))))
+      (is (string? (:url val)))))
+
+  (testing "VMT vector styles have required fields"
+    (doseq [[_ val] config/vmt-vector-styles]
+      (is (string? (:name val)))
+      (is (string? (:uri val)))
+      (is (keyword? (:provider val)))
+      (is (str/includes? (:uri val) "{key}")))))

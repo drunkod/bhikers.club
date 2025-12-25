@@ -14,6 +14,17 @@
 (defonce selected-tile-server (atom "osm"))
 (defonce tile-layer-type (atom :raster))
 
+;; NEW: Vector rendering engine (:maplibre or :vector-map-tiles)
+(defonce vector-engine (atom :maplibre))
+
+;; NEW: API keys for vector tile providers (loaded from settings)
+(defonce vmt-api-keys (atom {:stadia nil
+                             :maptiler nil
+                             :mapbox nil}))
+
+;; NEW: Loaded vector_map_tiles style (async loaded, nil until ready)
+(defonce vmt-style (atom nil))
+
 (defonce api-query-timeout (atom 3))
 (defonce pois-radius (atom 1000))
 

@@ -81,3 +81,11 @@ E/FlutterGeolocator(27655): Geolocator position updates started
 E/flutter (27655): [ERROR:flutter/runtime/dart_vm_initializer.cc(40)] Unhandled Exception: The location service on the device is disabled.
 E/flutter (27655): #0      GeolocatorAndroid.getPositionStream.<anonymous closure> (package:geolocator_android/src/geolocator_android.dart:202:7)
 
+This version of vector_map_tiles depends onflutter_gpu, which is currently available on the main flutter channel. To setup, run:
+
+flutter channel main && flutter upgrade
+Enable Flutter GPU via the manifest setting. This can be done either via command line argument --enable-flutter-gpu or by adding the FLTEnableFlutterGPU key set to true on iOS / MacOS or io.flutter.embedding.android.EnableFlutterGPU metadata key to true on Android. This is already done in the example project for iOS and MacOS.
+
+Ensure that Impeller is enabled. Read on how to enable impeller here.
+
+how enable main channel from nixpkgs in my flake.nix

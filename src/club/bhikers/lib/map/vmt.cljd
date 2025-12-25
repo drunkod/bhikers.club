@@ -1,0 +1,59 @@
+(ns club.bhikers.lib.map.vmt
+  "Vector Map Tiles integration using vector_tile_renderer."
+  (:require
+   [clojure.string :as str]
+   ["package:vector_map_tiles/vector_map_tiles.dart" :as vmt]
+   [club.bhikers.lib.config :refer [vmt-vector-styles]]
+   [club.bhikers.lib.state :refer [vmt-api-keys vmt-style]]
+   [club.bhikers.lib.logging :as logging]))
+
+(defn get-api-key
+  "Returns the API key for the given provider."
+  [provider]
+  (get @vmt-api-keys provider))
+
+(defn build-style-uri
+  "Replaces {key} placeholder in URI with actual API key."
+  [style-id]
+  (let [{:keys [uri provider]} (get vmt-vector-styles style-id)
+        api-key (get-api-key provider)]
+    (when (and uri api-key)
+      (str/replace uri "{key}" api-key))))
+
+(defn load-style!
+  "Asynchronously loads a vector_map_tiles style.
+   Updates vmt-style atom when complete."
+  [style-id]
+  (logging/d "Loading VMT style: " style-id)
+  (let [uri (build-style-uri style-id)
+        api-key (get-api-key (:provider (get vmt-vector-styles style-id)))]
+    (if (not uri)
+      (do
+        (logging/e "Cannot load style - missing API key for: " style-id)
+        (reset! vmt-style nil))
+      (do
+        (reset! vmt-style nil) ;; Clear while loading
+        (->
+         (vmt/StyleReader .uri uri .apiKey api-key)
+         .read
+         (.then (fn [style]
+                  (logging/d "VMT style loaded successfully")
+                  (reset! vmt-style style)))
+         (.catchError (fn [err]
+                        (logging/e "Failed to load VMT style: " err)
+                        (reset! vmt-style nil))))))))
+
+(defn style-ready?
+  "Returns true if a style is loaded and ready."
+  []
+  (some? @vmt-style))
+
+(defn create-vector-tile-layer
+  "Creates a VectorTileLayer widget from the loaded style.
+   Returns nil if style is not ready."
+  []
+  (when-let [style @vmt-style]
+    (vmt/VectorTileLayer
+     .tileProviders (.-providers ^vmt/Style style)
+     .theme (.-theme ^vmt/Style style)
+     .tileOffset vmt/TileOffset.DEFAULT)))

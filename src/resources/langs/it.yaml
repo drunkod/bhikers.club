@@ -12,8 +12,10 @@ settings:
   tile_server: Server piastrelle
   tile_layer_type: Tipo di livello tessera
   tile_layer_raster: Raster
-  tile_layer_vector: Vettore
-  advanced_group_title: Avanzato
+  tile_layer_vector: Vettoriale
+  vector_engine: "Motore di rendering vettoriale"
+  api_keys_title: "Chiavi API"
+  advanced_group_title: Avanzate
   api_query_timeout: Timeout della query api (in secondi)
   timeout_input_validation_error: Il timeout deve essere un intero valido tale che 2 < timeout < 10
   debug_mode: Abilita la modalità di debug
@@ -42,7 +44,7 @@ around_me:
   screen_title: Intorno a me
   description: Punti di interesse intorno alla mia posizione GPS attuale
   no_permission: Si prega di concedere l'autorizzazione alla posizione
-  location_service_disabled: Please enable location services on device
+  location_service_disabled: Si prega di abilitare i servizi di localizzazione sul dispositivo
   unknown_location: Posizione attuale sconosciuta...
   poi_types:
     shelter: Rifugi
@@ -61,7 +63,7 @@ common:
   close: Chiudi
   radius: Raggio di ricerca
   permission-denied: autorizzazione permanentemente negata per
-  open_settings: Open Settings
+  open_settings: Apri impostazioni
 notifications:
   title: Notifiche
 debuglog:

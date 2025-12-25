@@ -37,9 +37,31 @@
 "cyclosm" {:name "CyclOSM"
 :url "https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png"}})
 
-(defonce vector-tile-styles
-{"protomaps" {:name "MapLibre (Protomaps)"
-:url "https://api.protomaps.com/styles/v2/light.json?key=48c711a2fc69c6f0"}})
+;; Existing MapLibre styles (keep as-is, rename for clarity)
+(defonce maplibre-vector-styles
+  {"protomaps" {:name "Protomaps Light"
+                :url "https://api.protomaps.com/styles/v2/light.json?key=48c711a2fc69c6f0"}})
+
+;; NEW: vector_map_tiles styles (requires API keys)
+(defonce vmt-vector-styles
+  {"stadia-alidade" {:name "Stadia Alidade Smooth"
+                     :uri "https://tiles.stadiamaps.com/styles/alidade_smooth.json?api_key={key}"
+                     :provider :stadia}
+   "stadia-outdoors" {:name "Stadia Outdoors"
+                      :uri "https://tiles.stadiamaps.com/styles/outdoors.json?api_key={key}"
+                      :provider :stadia}
+   "maptiler-streets" {:name "MapTiler Streets"
+                       :uri "https://api.maptiler.com/maps/streets-v2/style.json?key={key}"
+                       :provider :maptiler}
+   "maptiler-outdoor" {:name "MapTiler Outdoor"
+                       :uri "https://api.maptiler.com/maps/outdoor-v2/style.json?key={key}"
+                       :provider :maptiler}
+   "mapbox-streets" {:name "Mapbox Streets"
+                     :uri "mapbox://styles/mapbox/streets-v12?access_token={key}"
+                     :provider :mapbox}})
+
+;; NEW: Vector rendering engine options
+(defonce vector-engines [:maplibre :vector-map-tiles])
 
 (defonce icicommencelaventure (ll/LatLng 48.51479 2.65053))
 (defonce vertouplage (ll/LatLng 47.1612 -1.4778))

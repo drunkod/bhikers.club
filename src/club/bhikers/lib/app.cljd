@@ -5,6 +5,7 @@
             ["package:easy_localization/easy_localization.dart" :as l10n]
             [club.bhikers.lib.config :as config]
             [club.bhikers.lib.state :as state]
+            [club.bhikers.lib.map.vmt :as vmt-lib]
             [club.bhikers.lib.utils :refer [str->location-accuracy]]))
 
 (defn init! [& {:keys [mock-mode?] :or {mock-mode? false}}]
@@ -26,14 +27,27 @@
         _debug-setting (#/(.getValue bool) Settings "/advanced/debug-mode?" .defaultValue false)
         _poi-type-setting (#/(.getValue String) Settings "/general/default-poi-type" .defaultValue config/default-poi-type)
 
+        ;; NEW: Load vector engine preference
+        _vector-engine-setting (#/(.getValue String) Settings "/general/vector-engine" 
+                                  .defaultValue "maplibre")
+
+        ;; NEW: Load API keys from settings
+        _stadia-key (#/(.getValue String) Settings "/api-keys/stadia" .defaultValue "")
+        _maptiler-key (#/(.getValue String) Settings "/api-keys/maptiler" .defaultValue "")
+        _mapbox-key (#/(.getValue String) Settings "/api-keys/mapbox" .defaultValue "")
+
         ;; Map Init Logic: determine which server key to read based on layer type
         _tile-layer-type-setting (#/(.getValue String) Settings "/general/tile-layer-type" .defaultValue "raster")
 
         ;; Dynamic key selection:
-        server-key (if (= _tile-layer-type-setting "raster")
-                       "/general/tile-server/raster"
-                       "/general/tile-server/vector")
-        default-server (if (= _tile-layer-type-setting "raster") "osm" "protomaps")
+        server-key (cond
+                     (= _tile-layer-type-setting "raster") "/general/tile-server/raster"
+                     (= _vector-engine-setting "maplibre") "/general/tile-server/maplibre"
+                     :else "/general/tile-server/vmt")
+        default-server (cond
+                         (= _tile-layer-type-setting "raster") "osm"
+                         (= _vector-engine-setting "maplibre") "protomaps"
+                         :else "stadia-alidade")
 
         _tile-server-setting (#/(.getValue String) Settings server-key .defaultValue default-server)]
 
@@ -53,4 +67,14 @@
     (reset! state/force-debug-mode? _debug-setting)
     (reset! state/selected-poi-type _poi-type-setting)
     (reset! state/selected-tile-server _tile-server-setting)
-    (reset! state/tile-layer-type (keyword _tile-layer-type-setting))))
+    (reset! state/tile-layer-type (keyword _tile-layer-type-setting))
+    
+    ;; NEW: Set vector engine and API keys
+    (reset! state/vector-engine (keyword _vector-engine-setting))
+    (reset! state/vmt-api-keys {:stadia (when (not-empty _stadia-key) _stadia-key)
+                                :maptiler (when (not-empty _maptiler-key) _maptiler-key)
+                                :mapbox (when (not-empty _mapbox-key) _mapbox-key)})
+    
+    ;; Load VMT style if using vector_map_tiles
+    (when (= (keyword _vector-engine-setting) :vector-map-tiles)
+      (vmt-lib/load-style! _tile-server-setting))))

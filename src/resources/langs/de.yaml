@@ -13,6 +13,8 @@ settings:
   tile_layer_type: Kachelebene Typ
   tile_layer_raster: Raster
   tile_layer_vector: Vektor
+  vector_engine: "Vektor-Rendering-Engine"
+  api_keys_title: "API-Schlüssel"
   advanced_group_title: Fortgeschritten
   api_query_timeout: API-Abfrage-Timeout (in Sekunden)
   timeout_input_validation_error: Das Timeout muss eine gültige Ganzzahl sein, wobei 2 < Timeout < 10
@@ -42,7 +44,7 @@ around_me:
   screen_title: In meiner Nähe
   description: POIs um meine aktuelle GPS-Position
   no_permission: Bitte erteilen Sie die Standortberechtigung
-  location_service_disabled: Please enable location services on device
+  location_service_disabled: Bitte aktivieren Sie die Standortdienste auf dem Gerät
   unknown_location: Aktueller Standort unbekannt...
   poi_types:
     shelter: Unterkünfte
@@ -61,7 +63,7 @@ common:
   close: Schließen
   radius: Suchradius
   permission-denied: Berechtigung dauerhaft verweigert für
-  open_settings: Open Settings
+  open_settings: Einstellungen öffnen
 notifications:
   title: Benachrichtigungen
 debuglog:

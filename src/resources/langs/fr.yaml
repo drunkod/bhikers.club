@@ -13,6 +13,8 @@ settings:
   tile_layer_type: Type de couche de tuiles
   tile_layer_raster: Raster
   tile_layer_vector: Vecteur
+  vector_engine: "Moteur de rendu vectoriel"
+  api_keys_title: "Clés API"
   advanced_group_title: Avancé
   api_query_timeout: délai d'attente de la requête api (en secondes)
   timeout_input_validation_error: Le délai d'attente doit être un entier valide tel que 2 < délai d'attente < 10
@@ -42,7 +44,7 @@ around_me:
   screen_title: Autour de moi
   description: Points d'intérêt autour de ma position GPS actuelle
   no_permission: Veuillez accorder l'autorisation de localisation
-  location_service_disabled: Please enable location services on device
+  location_service_disabled: Veuillez activer les services de localisation sur l'appareil
   unknown_location: Emplacement actuel inconnu...
   poi_types:
     shelter: Abris
@@ -60,7 +62,7 @@ about:
 common:
   close: Fermer
   permission-denied: autorisation définitivement refusée pour
-  open_settings: Open Settings
+  open_settings: Ouvrir les paramètres
   radius: Rayon de recherche
 notifications:
   title: Notifications

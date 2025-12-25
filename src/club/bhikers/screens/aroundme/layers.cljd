@@ -7,10 +7,14 @@
 ["package:flutter_map_location_marker/flutter_map_location_marker.dart" :as maploc]
 ["package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart"
 :refer [MarkerClusterLayerWidget MarkerClusterLayerOptions]]
-[club.bhikers.lib.config :refer [raster-tile-servers
-vector-tile-styles]]
-[club.bhikers.lib.state :refer [selected-tile-server
-tile-layer-type]]
+["package:vector_map_tiles/vector_map_tiles.dart" :as vmt]
+ [club.bhikers.lib.config :refer [raster-tile-servers
+                                  maplibre-vector-styles
+                                  vmt-vector-styles]]
+ [club.bhikers.lib.state :refer [selected-tile-server
+                                 tile-layer-type
+                                 vector-engine
+                                 vmt-style]]
 [club.bhikers.lib.pois :refer [dynamic-map-pois
 poi->LatLng]]
 [club.bhikers.lib.pois.ui :refer [poi->map-location-marker]]
@@ -24,19 +28,46 @@ poi->LatLng]]
 ;; =============================================================================
 
 (defn base-map-layer []
-(f/widget
-:watch [layer-type tile-layer-type
-selected-server selected-tile-server]
-(if (= layer-type :raster)
-(fmap/TileLayer
-.urlTemplate (:url (get raster-tile-servers selected-server (get raster-tile-servers "osm")))
-.userAgentPackageName "club.bhikers"
-.tileProvider (CancellableNetworkTileProvider)
-.maxZoom 18)
-(let [style-url (:url (get vector-tile-styles selected-server (get vector-tile-styles "protomaps")))]
-(MapLibreLayer.
-.key (m/ValueKey style-url)
-.initStyle style-url)))))
+  (f/widget
+   :watch [layer-type tile-layer-type
+           selected-server selected-tile-server
+           v-engine vector-engine
+           loaded-style vmt-style]
+   (cond
+     ;; Raster tiles
+     (= layer-type :raster)
+     (fmap/TileLayer
+      .urlTemplate (:url (get raster-tile-servers selected-server (get raster-tile-servers "osm")))
+      .userAgentPackageName "club.bhikers"
+      .tileProvider (CancellableNetworkTileProvider)
+      .maxZoom 18)
+     
+     ;; Vector tiles with MapLibre
+     (and (= layer-type :vector) (= v-engine :maplibre))
+     (let [style-url (:url (get maplibre-vector-styles selected-server 
+                               (get maplibre-vector-styles "protomaps")))]
+       (MapLibreLayer.
+        .key (m/ValueKey style-url)
+        .initStyle style-url))
+     
+     ;; Vector tiles with vector_map_tiles
+     (and (= layer-type :vector) (= v-engine :vector-map-tiles))
+     (if loaded-style
+       ;; Style is ready - render the layer
+       (let [^vmt/Style style loaded-style]
+         (vmt/VectorTileLayer
+          .tileProviders (.-providers style)
+          .theme (.-theme style)
+          .tileOffset vmt/TileOffset.DEFAULT))
+       ;; Style loading - show placeholder
+       (m/Container
+        .color m/Colors.grey
+        .child (m/Center 
+                .child (m/CircularProgressIndicator))))
+     
+     ;; Fallback
+     :else
+     (m/Container .child (m/Text "Unknown layer type")))))
 
 ;; =============================================================================
 ;; POI Markers Layer

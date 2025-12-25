@@ -20,7 +20,8 @@ m/Container
 (settings/SettingsScreen
 .title (l10n-str "settings.screen_title")
 .children
-[(ui/general-group ctx)
-(ui/map-group)
-(ui/advanced-location-group)
-(ui/advanced-group)]))))
+            [(ui/general-group ctx)
+             (ui/map-group)
+             (ui/api-keys-group)
+             (ui/advanced-location-group)
+             (ui/advanced-group)]))))
