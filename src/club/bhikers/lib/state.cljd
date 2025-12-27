@@ -11,8 +11,10 @@
 ;; =============================================================================
 
 (defonce selected-poi-type (atom config/default-poi-type))
-(defonce selected-tile-server (atom "osm"))
-(defonce tile-layer-type (atom :raster))
+(defonce mwm-storage (atom nil))
+(defonce map-controller (atom nil))
+(defonce downloaded-regions (atom #{}))
+(defonce active-downloads (atom {}))  ; region-name -> progress
 
 (defonce api-query-timeout (atom 3))
 (defonce pois-radius (atom 1000))

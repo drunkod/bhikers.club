@@ -1,111 +1,31 @@
 (ns club.bhikers.lib.map.widgets
-"Reusable map UI widgets."
-(:require ["package:flutter/material.dart" :as m]
-["package:flutter_map/flutter_map.dart" :as fmap]
-[cljd.flutter :as f]))
+  "Map UI widgets."
+  (:require ["package:flutter/material.dart" :as m]
+            [club.bhikers.lib.state :refer [debug-mode?]]
+            [club.bhikers.lib.logging :as logging]
+            [cljd.flutter :as f]))
 
+;; =============================================================================
+;; Map Widgets (simplified for agus_maps_flutter)
+;; =============================================================================
 
 (defn msg
-"Renders a message overlay widget for the map.
-
-Options:
-:alignment - Alignment of the message box (default: bottomCenter).
-:bottom-padding - Padding from the bottom edge (default: 50.0)."
-[& {:keys [alignment bottom-padding]
-:or {alignment m/Alignment.bottomCenter
-bottom-padding 50}}]
-(f/widget
-:get [:map-state]
-:watch [{:keys [message]} map-state]
-(m/Align .alignment alignment)
-(if (not-empty message)
-(f/widget
-(m/Padding .padding (m/EdgeInsets.only .bottom bottom-padding))
-(f/widget
-(m/Container .decoration (m/BoxDecoration .color m/Colors.white
-.border (m/Border.all)
-.borderRadius (m/BorderRadius.circular 5)))
-(f/widget
-(m/Padding .padding (m/EdgeInsets.all 5))
-(m/Text message .overflow m/TextOverflow.ellipsis))))
-(m/Container))))
-
-(defn control-buttons
-"Renders zoom and location control buttons (FABs).
-
-Options:
-:minZoom - Minimum zoom level (default: 1).
-:maxZoom - Maximum zoom level (default: 18).
-:onMyLocation - Callback when 'My Location' button is tapped.
-:onMyLocationSecondary - Callback on long-press/double-tap of 'My Location'."
-[& {:keys [minZoom
-maxZoom
-mini
-padding
-alignment
-zoomInColor
-zoomInColorIcon
-zoomInIcon
-zoomOutColor
-zoomOutColorIcon
-zoomOutIcon
-myLocationColor
-myLocationColorIcon
-myLocationIcon
-onMyLocation
-onMyLocationSecondary]
-:or {minZoom 1
-maxZoom 18
-mini false
-padding 2.0
-alignment m/Alignment.topRight
-zoomInColor nil
-zoomInColorIcon nil
-zoomInIcon m/Icons.zoom_in
-zoomOutColor nil
-zoomOutColorIcon nil
-zoomOutIcon m/Icons.zoom_out
-myLocationColor nil
-myLocationColorIcon nil
-myLocationIcon m/Icons.my_location
-onMyLocation (fn [] nil)
-onMyLocationSecondary (fn [] (onMyLocation))}}]
-(f/widget
-:get [fmap/MapController
-fmap/MapCamera
-m/Theme]
-(m/Align .alignment alignment)
-(m/Column
-.mainAxisSize m/MainAxisSize.min
-.children
-[(m/Padding .padding (m/EdgeInsets.only .left padding .top padding .right padding)
-.child (m/FloatingActionButton
-.heroTag "zoomInButton"
-.mini mini
-.backgroundColor (or zoomInColor (.-primaryColorLight theme))
-.onPressed (fn [] (-> map-controller (.move (.-center map-camera) (min (inc (.-zoom map-camera)) maxZoom)))
-nil)
-.child (m/Icon zoomInIcon .color (or zoomInColorIcon (-> theme .-iconTheme .-color)))))
-(m/Padding .padding (m/EdgeInsets.only .left padding .top padding .right padding)
-.child (m/FloatingActionButton
-.heroTag "zoomOutButton"
-.mini mini
-.backgroundColor (or zoomOutColor (.-primaryColorLight theme))
-.onPressed (fn [] (-> map-controller (.move (.-center map-camera) (max (dec (.-zoom map-camera)) minZoom)))
-nil)
-.child (m/Icon zoomOutIcon .color (or zoomOutColorIcon (-> theme .-iconTheme .-color)))))
-(f/widget
-(m/Padding .padding (m/EdgeInsets.all padding))
-(m/Container .width 56 .height 56
-.decoration (m/BoxDecoration .shape m/BoxShape.rectangle
-.borderRadius (m/BorderRadius.circular 15)
-.boxShadow [(m/BoxShadow .color m/Colors.black26
-.blurRadius 10
-.spreadRadius 2)]
-.color (or myLocationColor (.-primaryColorLight theme))))
-(m/InkWell
-.splashColor m/Colors.red
-.onTap onMyLocation
-.onDoubleTap onMyLocationSecondary
-.onLongPress onMyLocationSecondary)
-(m/Icon myLocationIcon .color (or myLocationColorIcon (-> theme .-iconTheme .-color))))])))
+  "Display debug message overlay on map (only in debug mode)."
+  []
+  (f/widget
+   :get [:map-state]
+   :watch [{:keys [message]} map-state]
+   (if (not-empty message)
+     (m/Align
+      .alignment m/Alignment.bottomCenter
+      .child (m/Padding
+              .padding (m/EdgeInsets.only .bottom 50)
+              .child (m/Container
+                      .decoration (m/BoxDecoration
+                                   .color m/Colors.white
+                                   .border (m/Border.all)
+                                   .borderRadius (m/BorderRadius.circular 5))
+                      .child (m/Padding
+                              .padding (m/EdgeInsets.all 5)
+                              .child (m/Text message .overflow m/TextOverflow.ellipsis)))))
+     (m/Container))))

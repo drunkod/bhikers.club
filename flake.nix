@@ -36,7 +36,7 @@
             # Useful packages for building and testing.
             build-tools-34-0-0
             cmdline-tools-latest
-            emulator
+            # emulator
             platform-tools
             platforms-android-33
             platforms-android-34
@@ -47,7 +47,8 @@
             # CMake - required for native builds
             cmake-3-22-1
             # Other useful packages for a development environment.
-            # ndk-26-1-10909125
+            ndk-26-1-10909125
+            ndk-27-0-12077973
             # skiaparser-3
             # sources-android-34
           ]
@@ -64,7 +65,7 @@
 
         } // lib.optionalAttrs (system == "x86_64-linux") {
           # Android Studio in nixpkgs is currently packaged for x86_64-linux only.
-          android-studio = pkgs.androidStudioPackages.stable;
+          # android-studio = pkgs.androidStudioPackages.stable;
           # android-studio = pkgs.androidStudioPackages.beta;
           # android-studio = pkgs.androidStudioPackages.preview;
           # android-studio = pkgs.androidStudioPackage.canary;

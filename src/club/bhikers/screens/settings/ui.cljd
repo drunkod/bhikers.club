@@ -13,15 +13,11 @@
                                             api-query-timeout
                                             refresh-location-distance-filter
                                             refresh-location-interval-duration
-                                            refresh-location-accuracy
-                                            selected-tile-server
-                                            tile-layer-type]]
+                                            refresh-location-accuracy]]
             [club.bhikers.lib.config :refer [supported-poi-types
                                           supported-locales default-locale
                                           max-pois-radius
-                                          min-pois-radius
-                                          raster-tile-servers
-                                          vector-tile-styles]]
+                                          min-pois-radius]]
             [cljd.flutter :as f]))
 
 ;; =============================================================================
@@ -66,47 +62,6 @@
                      (logging/e "Failed to change language: " e)))
                  nil))]))
 
-;; =============================================================================
-;; Map Settings
-;; =============================================================================
-
-(defn map-group []
-  (f/widget
-   :watch [layer-type tile-layer-type
-           selected-server selected-tile-server]
-   (settings/SettingsGroup
-    .title (l10n-str "settings.map_group_title")
-    .children
-    [;; Tile Layer Type Selector
-     (#/(settings/DropDownSettingsTile String)
-      .leading (m/Icon m/Icons.layers)
-      .settingKey "/general/tile-layer-type"
-      .title (l10n-str "settings.tile_layer_type")
-      .values {"raster" (l10n-str "settings.tile_layer_raster")
-               "vector" (l10n-str "settings.tile_layer_vector")}
-      .selected (name layer-type)
-      .onChange #(let [new-type (keyword %)]
-                   (reset! tile-layer-type new-type)
-                   ;; Reset server selection to default of new type to avoid invalid state
-                   (let [new-default (if (= new-type :raster) "osm" "protomaps")]
-                     (reset! selected-tile-server new-default))))
-
-     ;; Tile Server Selector
-     (let [is-raster (= layer-type :raster)
-           options (if is-raster raster-tile-servers vector-tile-styles)
-           ;; Use separate keys to avoid value mismatch crashes
-           setting-key (if is-raster "/general/tile-server/raster" "/general/tile-server/vector")
-           ;; Ensure selected value exists in options, else fallback
-           current-val (if (contains? options selected-server) selected-server (first (keys options)))]
-       (#/(settings/DropDownSettingsTile String)
-        ;; Key forces rebuild when type changes, ensuring cleaner state transition
-        .key (m/ValueKey setting-key)
-        .leading (m/Icon m/Icons.map)
-        .settingKey setting-key
-        .title (l10n-str "settings.tile_server")
-        .values (into {} (map (fn [[id {:keys [name]}]] [id name]) options))
-        .selected current-val
-        .onChange #(reset! selected-tile-server %)))])))
 
 ;; =============================================================================
 ;; Location Settings

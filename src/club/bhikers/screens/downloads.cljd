@@ -1,0 +1,138 @@
+(ns club.bhikers.screens.downloads
+  "Downloads screen for managing offline map regions."
+  (:require ["package:flutter/material.dart" :as m]
+            ["package:agus_maps_flutter/agus_maps_flutter.dart" :as agus]
+            ["package:agus_maps_flutter/mirror_service.dart" :as mirror-service]
+            ["package:path_provider/path_provider.dart" :as path-provider]
+            ["dart:io" :as io]
+            [club.bhikers.lib.maps.storage :as storage]
+            [club.bhikers.lib.maps.mirror :as mirror]
+            [club.bhikers.lib.maps.cache :as cache]
+            [club.bhikers.lib.state :as state]
+            [club.bhikers.lib.config :as config]
+            [club.bhikers.lib.logging :as logging]
+            [club.bhikers.lib.i18n :refer [l10n-str]]
+            [club.bhikers.screens.common.appbar :refer [app-bar]]
+            [club.bhikers.screens.common.drawer :refer [drawer]]
+            [cljd.flutter :as f]))
+
+(defn check-internet-connectivity []
+  (try
+    (let [results (await (io/InternetAddress.lookup "google.com"))]
+      (and (seq results)
+           (seq (.-rawAddress ^io/InternetAddress (first results)))))
+    (catch Exception _ false)))
+
+(defn region-tile [mwm-storage region active-downloads download-progress on-download]
+  (let [^mirror-service/MwmRegion r region
+        region-name (.-name r)
+        is-downloaded (storage/is-downloaded mwm-storage region-name)
+        is-downloading (contains? active-downloads region-name)
+        progress (get download-progress region-name 0.0)]
+    (m/ListTile
+     .title (m/Text (.-displayName r))
+     .subtitle (if is-downloading
+                 (m/LinearProgressIndicator .value progress)
+                 (m/Text (str (.-sizeMB r) " MB")))
+     .trailing
+     (cond
+       is-downloaded
+       (m/Icon m/Icons.check_circle .color m/Colors.green)
+
+       is-downloading
+       (m/SizedBox .width 24 .height 24
+                   .child (m/CircularProgressIndicator .strokeWidth 2))
+
+       :else
+       (m/IconButton
+        .icon (m/Icon m/Icons.download)
+        .onPressed #(on-download region))))))
+
+(defn downloads-screen []
+  (let [ui-state (atom {:loading? true
+                        :loading-step :idle
+                        :error nil
+                        :search-query ""
+                        :regions []
+                        :filtered-regions []
+                        :active-downloads #{}
+                        :download-progress {}})]
+    (f/widget
+     :context ctx
+     :watch [mwm-storage state/mwm-storage
+             {:keys [loading? loading-step error search-query
+                     regions filtered-regions active-downloads
+                     download-progress]} ui-state]
+     :managed [mirror-svc (mirror/init) :dispose mirror/dispose]
+     :let [on-search (fn [query]
+                       (swap! ui-state assoc :search-query query)
+                       (if (empty? query)
+                         (swap! ui-state assoc :filtered-regions regions)
+                         (let [q (.toLowerCase ^String query)]
+                           (swap! ui-state assoc :filtered-regions
+                                  (filterv #(.contains (.toLowerCase (.-displayName ^mirror-service/MwmRegion %)) q)
+                                           regions)))))
+           
+           on-download (fn [region]
+                         (logging/d "Download requested: " (.-name ^mirror-service/MwmRegion region))
+                         ;; TODO: Implement actual download logic
+                         nil)
+           
+           installed-count (if mwm-storage
+                             (count (filter #(storage/is-downloaded mwm-storage 
+                                              (.-name ^mirror-service/MwmRegion %)) 
+                                            regions))
+                             0)]
+
+     (m/Scaffold
+      .appBar (app-bar)
+      .drawer (drawer)
+      .body
+      (if-not mwm-storage
+        (m/Center .child (m/CircularProgressIndicator))
+        (m/Column
+         .children
+         [(m/Container
+           .padding (m/EdgeInsets.all 16)
+           .child
+           (m/Column
+            .crossAxisAlignment m/CrossAxisAlignment.start
+            .children
+            [(m/TextField
+              .decoration (m/InputDecoration
+                           .hintText (l10n-str "downloads.search_hint")
+                           .prefixIcon (m/Icon m/Icons.search)
+                           .border (m/OutlineInputBorder))
+              .onChanged on-search)
+             (m/SizedBox .height 8)
+             (m/Row
+              .children
+              [(m/Chip
+                .avatar (m/Icon m/Icons.check_circle .size 16 .color m/Colors.green)
+                .label (m/Text (str installed-count " " (l10n-str "downloads.installed"))))
+               (m/Spacer)
+               (m/IconButton
+                .icon (m/Icon m/Icons.refresh)
+                .onPressed (fn []
+                             (swap! ui-state assoc :loading? true :error nil)
+                             nil))])]))
+
+          (if loading?
+            (m/Expanded
+             .child (m/Center
+                     .child (m/Column
+                             .mainAxisAlignment m/MainAxisAlignment.center
+                             .children
+                             [(m/CircularProgressIndicator)
+                              (m/SizedBox .height 16)
+                              (m/Text (name loading-step))])))
+            (m/Expanded
+             .child
+             (m/ListView.builder
+              .itemCount (count filtered-regions)
+              .itemBuilder (fn [_ idx]
+                             (region-tile mwm-storage
+                                          (nth filtered-regions idx)
+                                          active-downloads
+                                          download-progress
+                                          on-download)))))]))))))

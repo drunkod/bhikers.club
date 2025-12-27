@@ -1,16 +1,18 @@
 (ns club.bhikers.lib.position
-  (:require
-   ["package:flutter/foundation.dart" :as foundation]
-   ["dart:async" :as async]
-   ["dart:io" :as io]
-   ["package:geolocator/geolocator.dart" :as geo]
-   ["package:flutter_map_location_marker/flutter_map_location_marker.dart" :as maploc]
-   [club.bhikers.lib.state :refer [refresh-location-distance-filter
-                                   refresh-location-interval-duration
-                                   refresh-location-accuracy]]
-   [club.bhikers.lib.logging :as logging]))
+  "Position and location utilities."
+  (:require ["package:flutter/foundation.dart" :as foundation]
+            ["dart:async" :as async]
+            ["dart:io" :as io]
+            ["package:geolocator/geolocator.dart" :as geo]
+            [club.bhikers.lib.state :refer [refresh-location-distance-filter
+                                             refresh-location-interval-duration
+                                             refresh-location-accuracy]]
+            [club.bhikers.lib.logging :as logging]))
 
-;; per device type location settings
+;; =============================================================================
+;; Position Stream Management
+;; =============================================================================
+
 (defn streams-location-settings []
   (let [distance-filter @refresh-location-distance-filter
         interval-duration @refresh-location-interval-duration
@@ -55,7 +57,7 @@
                       (== permission geo/LocationPermission.deniedForever))
                   (when (not (.-isClosed stream-controller))
                     (logging/d "permission denied, closing stream controller")
-                    (-> stream-controller .-sink (.addError (maploc/PermissionDeniedException.)))
+                    (-> stream-controller .-sink (.addError (Exception. "Permission denied")))
                     (await (.close stream-controller)))
                   ;; main clause: perm ok: check services and subscribe
                   (or (== permission geo/LocationPermission.whileInUse)
@@ -64,14 +66,14 @@
                     (logging/d "permission granted, setup stream controller")
                     (let [service-enabled? (await (.isLocationServiceEnabled geo/Geolocator))
                           status-stream-subscription (when (not foundation/kIsWeb)
-                                                       (logging/d "listen to service status strean")
+                                                       (logging/d "listen to service status stream")
                                                        (.listen
                                                         (.getServiceStatusStream geo/Geolocator)
                                                         (fn [status]
                                                           (if (not= status geo/ServiceStatus.enabled)
                                                             (do
                                                               (logging/d "service status is disabled. error.")
-                                                              (-> stream-controller .-sink (.addError (maploc/ServiceDisabledException.))))
+                                                              (-> stream-controller .-sink (.addError (Exception. "Location service disabled"))))
                                                             (-> stream-controller .-sink (.add nil))))))
                           last-known-position (when (and service-enabled? (not foundation/kIsWeb))
                                                 (logging/d "await for last known position")
@@ -89,14 +91,14 @@
                                                     .onError (fn [err]
                                                                (logging/d "position stream error from geolocator: " err)
                                                                (when (not (.-isClosed stream-controller))
-                                                                 (-> stream-controller .-sink (.addError (maploc/ServiceDisabledException.))))))))]
+                                                                 (-> stream-controller .-sink (.addError (Exception. "Location service error"))))))))]
                       (when (and last-known-position (not (.-isClosed stream-controller)))
                         (logging/d "add last-known-position to stream controller sink: " last-known-position)
                         (-> stream-controller .-sink (.add last-known-position)))
                       (when status-stream-subscription (swap! cancel-functions conj #(.cancel status-stream-subscription)))
                       (when position-subscription (swap! cancel-functions conj #(.cancel position-subscription)))))
 
-                  :else (-> stream-controller .-sink (.addError (maploc/IncorrectSetupException.)))))]
+                  :else (-> stream-controller .-sink (.addError (Exception. "Incorrect setup")))))]
 
     (doto stream-controller
       (.-onCancel!
@@ -112,23 +114,22 @@
              (logging/d (str "location permission is " permission))
              (if (== permission geo/LocationPermission.denied)
                (do
-                 (-> stream-controller .-sink (.addError maploc/PermissionDeniedException))
-                 (setup (await (->  geo/Geolocator .requestPermission))))
+                 (-> stream-controller .-sink (.addError (Exception. "Permission denied")))
+                 (setup (await (-> geo/Geolocator .requestPermission))))
                (setup permission)))
 
            (catch geo/PermissionDefinitionsNotFoundException _
-             (-> stream-controller .-sink (.addError maploc/IncorrectSetupException)))))))
+             (-> stream-controller .-sink (.addError (Exception. "Permission definitions not found"))))))))
     stream-controller))
 
 (defn new-position-bstream ^#/(async/Stream geo/Position?)
   [^#/(async/StreamController geo/Position?) controller]
   (logging/d "starting position broadcast stream...")
-  ;(.asBroadcastStream (.defaultPositionStreamSource (maploc/LocationMarkerDataStreamFactory)))
   (.asBroadcastStream (.-stream controller)
                       .onListen (fn [^#/(async/StreamSubscription geo/Position?) controller]
                                   (logging/d "listening on position b-stream")
                                   (when (.-isPaused controller)
-                                    (logging/d "resumimg position b-stream controller")
+                                    (logging/d "resuming position b-stream controller")
                                     (.resume controller)
                                   ;; returning nil is important as callback must be void func
                                     nil))
@@ -138,22 +139,12 @@
                                   ;; returning nil is important as callback must be void func
                                   nil)))
 
-;; location marker stream stream helpers / not used
-;; from maploc, returns a stream of markers from a stream of locations
-(defn ->location-marker-stream
-  [^#/(async/Stream geo/Position?) stream]
-  (logging/d "convert position stream to location marker stream")
-  (-> stream (.map (fn [^geo/Position? position]
-                     (maploc/LocationMarkerPosition
-                      .latitude (.-latitude position)
-                      .longitude (.-longitude position)
-                      .accuracy (.-accuracy position))))))
-
 (defn subscribe-position-stream ^#/(async/StreamSubscription geo/Position?)
   [^#/(async/Stream geo/Position?) stream listener & {:keys [on-error]}]
   (logging/d "subscribe to position stream")
   (.listen stream
            (fn [^geo/Position? position]
-             (listener (.-latitude position)
-                       (.-longitude position)))
+             (when position
+               (listener (.-latitude position)
+                         (.-longitude position))))
            .onError on-error))

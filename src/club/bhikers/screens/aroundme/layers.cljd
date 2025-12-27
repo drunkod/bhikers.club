@@ -1,96 +1,32 @@
 (ns club.bhikers.screens.aroundme.layers
-(:require ["package:flutter/material.dart" :as m]
-["package:flutter_map/flutter_map.dart" :as fmap]
-["package:flutter_map_cancellable_tile_provider/flutter_map_cancellable_tile_provider.dart"
-:refer [CancellableNetworkTileProvider]]
-["package:flutter_map_maplibre/flutter_map_maplibre.dart" :refer [MapLibreLayer]]
-["package:flutter_map_location_marker/flutter_map_location_marker.dart" :as maploc]
-["package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart"
-:refer [MarkerClusterLayerWidget MarkerClusterLayerOptions]]
-[club.bhikers.lib.config :refer [raster-tile-servers
-vector-tile-styles]]
-[club.bhikers.lib.state :refer [selected-tile-server
-tile-layer-type]]
-[club.bhikers.lib.pois :refer [dynamic-map-pois
-poi->LatLng]]
-[club.bhikers.lib.pois.ui :refer [poi->map-location-marker]]
-[club.bhikers.lib.logging :as logging]
-[club.bhikers.screens.aroundme.ui :as ui]
-[cljd.flutter :as f]))
+  (:require ["package:flutter/material.dart" :as m]
+            ["package:agus_maps_flutter/agus_maps_flutter.dart" :as agus]
+            [club.bhikers.lib.state :as state]
+            [club.bhikers.lib.config :as config]
+            [club.bhikers.lib.logging :as logging]
+            [cljd.flutter :as f]))
 
-
-;; =============================================================================
-;; Base Map Layer (Raster / Vector)
-;; =============================================================================
+(defn on-map-ready []
+  (logging/d "AgusMap surface ready!"))
 
 (defn base-map-layer []
-(f/widget
-:watch [layer-type tile-layer-type
-selected-server selected-tile-server]
-(if (= layer-type :raster)
-(fmap/TileLayer
-.urlTemplate (:url (get raster-tile-servers selected-server (get raster-tile-servers "osm")))
-.userAgentPackageName "club.bhikers"
-.tileProvider (CancellableNetworkTileProvider)
-.maxZoom 18)
-(let [style-url (:url (get vector-tile-styles selected-server (get vector-tile-styles "protomaps")))]
-(MapLibreLayer.
-.key (m/ValueKey style-url)
-.initStyle style-url)))))
-
-;; =============================================================================
-;; POI Markers Layer
-;; =============================================================================
+  (f/widget
+   :watch [map-controller state/map-controller]
+   (if map-controller
+     (agus/AgusMap
+      .initialLat (:lat config/default-location)
+      .initialLon (:lon config/default-location)
+      .initialZoom (:zoom config/default-location)
+      .controller map-controller
+      .onMapReady on-map-ready
+      .isVisible true)
+     (m/Center .child (m/CircularProgressIndicator)))))
 
 (defn pois-markers-widget []
-(f/widget
-:context ctx :get [:map-state :overpass-api]
-:watch [pois (dynamic-map-pois map-state overpass-api)]
-(MarkerClusterLayerWidget
-.options
-(MarkerClusterLayerOptions
-.maxClusterRadius 100
-.size (m/Size 40 40)
-.alignment m/Alignment.center
-.padding (m/EdgeInsets.all 50)
-.centerMarkerOnClick false
-.maxZoom 15
-.builder (fn [_ markers]
-(f/widget
-(m/Container
-.decoration (m/BoxDecoration .borderRadius (m/BorderRadius.circular 20)
-.color m/Colors.blue))
-(m/Center .child
-(m/Text (str (count markers))
-.style (m/TextStyle .color m/Colors.white)))))
-.markers (map #(fmap/Marker .point (poi->LatLng %)
-.height 40
-.width 40
-.child (m/GestureDetector
-.onTap (fn [] (ui/show-poi-info ctx %))
-.child (poi->map-location-marker %)))
-pois)))))
-
-;; =============================================================================
-;; Current Center Marker
-;; =============================================================================
+  (m/Container))
 
 (defn current-center-marker [current-pos-as-center? current-center]
-(if (and current-center (not current-pos-as-center?))
-(let [[lat lon] current-center]
-(maploc/AnimatedLocationMarkerLayer
-.position (maploc/LocationMarkerPosition .latitude lat .longitude lon .accuracy 0)))
-(m/Container)))
-
-;; =============================================================================
-;; Location Marker Style
-;; =============================================================================
+  (m/Container))
 
 (defn current-location-marker-style [current-pos-as-center? theme]
-(maploc/LocationMarkerStyle
-.showAccuracyCircle false
-.showHeadingSector false
-.marker (maploc/DefaultLocationMarker
-.color (if current-pos-as-center?
-(-> ^m/ThemeData theme .-colorScheme .-primary)
-(-> ^m/ThemeData theme .-colorScheme .-secondary)))))
+  nil)

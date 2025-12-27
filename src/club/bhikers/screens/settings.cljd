@@ -21,6 +21,6 @@ m/Container
 .title (l10n-str "settings.screen_title")
 .children
 [(ui/general-group ctx)
-(ui/map-group)
+
 (ui/advanced-location-group)
 (ui/advanced-group)]))))

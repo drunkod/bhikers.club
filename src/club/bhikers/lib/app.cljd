@@ -1,16 +1,70 @@
 (ns club.bhikers.lib.app
   (:require ["package:flutter_settings_screens/flutter_settings_screens.dart" :refer [Settings] :as settings]
             ["package:flutter/material.dart" :as m]
+            [club.bhikers.lib.logging :as logging]
             ["package:package_info_plus/package_info_plus.dart" :refer [PackageInfo]]
             ["package:easy_localization/easy_localization.dart" :as l10n]
+            ["package:agus_maps_flutter/agus_maps_flutter.dart" :as agus]
+            ["package:path_provider/path_provider.dart" :as path-provider]
+            ["dart:io" :as io]
             [club.bhikers.lib.config :as config]
             [club.bhikers.lib.state :as state]
+            [club.bhikers.lib.maps.storage :as storage]
             [club.bhikers.lib.utils :refer [str->location-accuracy]]))
 
 (defn init! [& {:keys [mock-mode?] :or {mock-mode? false}}]
   (m/WidgetsFlutterBinding.ensureInitialized)
   (settings/Settings.init .cacheProvider (settings/SharePreferenceCache))
   (await (l10n/EasyLocalization.ensureInitialized))
+
+  ;; Map Initialization
+  (logging/d "Initializing MWM storage...")
+  (reset! state/map-controller (agus/AgusMapController))
+  (let [mwm-storage (await (storage/init))]
+    (reset! state/mwm-storage mwm-storage)
+
+    ;; Cleanup partial downloads
+    (logging/d "Cleaning up partial downloads...")
+    (let [dir (await (path-provider/getApplicationDocumentsDirectory))
+          files (.listSync ^io/Directory dir)]
+      (doseq [^io/FileSystemEntity entity files]
+        (when (and (instance? io/File entity)
+                   (.endsWith (.-path ^io/FileSystemEntity entity) ".mwm.download"))
+          (logging/d "Removing partial download: " (.-path ^io/FileSystemEntity entity))
+          (await (.delete ^io/File entity)))))
+
+    ;; Validate metadata
+    (logging/d "Validating stored MWM metadata...")
+    (let [orphaned (await (storage/get-orphaned-regions mwm-storage))]
+      (when (seq orphaned)
+        (logging/d "Pruning orphaned regions: " orphaned)
+        (await (storage/prune-orphaned mwm-storage))))
+
+    ;; Extract bundled maps
+    (logging/d "Extracting bundled maps...")
+    (doseq [map-name config/bundled-maps]
+      (let [asset-path (str "assets/maps/" map-name ".mwm")
+            path (await (agus/extractMap asset-path))
+            file (io/File path)]
+        (when-not (storage/is-downloaded mwm-storage map-name)
+          (await (storage/upsert mwm-storage
+                                 (storage/MwmMetadata
+                                  .regionName map-name
+                                  .snapshotVersion "bundled"
+                                  .fileSize (await (.length file))
+                                  .downloadDate (DateTime.now)
+                                  .filePath path
+                                  .isBundled true))))))
+
+    ;; Extract ICU data
+    (logging/d "Extracting ICU data...")
+    (await (agus/extractMap "assets/maps/icudt75l.dat"))
+
+    ;; Extract CoMaps data
+    (logging/d "Extracting CoMaps data...")
+    (let [data-path (await (agus/extractDataFiles))]
+      (logging/d "Initializing engine with path: " data-path)
+      (agus/initWithPaths data-path data-path)))
 
   (let [pkg-info (if mock-mode?
                    (PackageInfo .appName "test" .packageName "test" .version "1.0.0" .buildNumber "42" .buildSignature "")
@@ -24,18 +78,7 @@
         _radius-setting (#/(.getValue double) Settings "/general/pois-radius" .defaultValue 1000)
         _query-timeout-setting (#/(.getValue String) Settings "/advanced/api-query-timeout" .defaultValue "5")
         _debug-setting (#/(.getValue bool) Settings "/advanced/debug-mode?" .defaultValue false)
-        _poi-type-setting (#/(.getValue String) Settings "/general/default-poi-type" .defaultValue config/default-poi-type)
-
-        ;; Map Init Logic: determine which server key to read based on layer type
-        _tile-layer-type-setting (#/(.getValue String) Settings "/general/tile-layer-type" .defaultValue "raster")
-
-        ;; Dynamic key selection:
-        server-key (if (= _tile-layer-type-setting "raster")
-                       "/general/tile-server/raster"
-                       "/general/tile-server/vector")
-        default-server (if (= _tile-layer-type-setting "raster") "osm" "protomaps")
-
-        _tile-server-setting (#/(.getValue String) Settings server-key .defaultValue default-server)]
+        _poi-type-setting (#/(.getValue String) Settings "/general/default-poi-type" .defaultValue config/default-poi-type)]
 
     (reset! state/app-info {:build-name (.-version pkg-info)
                              :build-number (.-buildNumber pkg-info)
@@ -51,6 +94,4 @@
     (reset! state/pois-radius _radius-setting)
     (reset! state/api-query-timeout (int/tryParse _query-timeout-setting))
     (reset! state/force-debug-mode? _debug-setting)
-    (reset! state/selected-poi-type _poi-type-setting)
-    (reset! state/selected-tile-server _tile-server-setting)
-    (reset! state/tile-layer-type (keyword _tile-layer-type-setting))))
+    (reset! state/selected-poi-type _poi-type-setting)))

@@ -19,16 +19,4 @@
           (str "Missing tags for POI type: " type))
       (is (not-empty (get config/poi-types->osm-tags type))))))
 
-(deftest tile-servers-test
-  (testing "Raster tile servers have names and urls"
-    (doseq [[key val] config/raster-tile-servers]
-      (is (string? (:name val)))
-      (is (string? (:url val)))
-      (is (re-find #"\{z\}" (:url val)))
-      (is (re-find #"\{x\}" (:url val)))
-      (is (re-find #"\{y\}" (:url val)))))
 
-  (testing "Vector tile styles have names and urls"
-    (doseq [[key val] config/vector-tile-styles]
-      (is (string? (:name val)))
-      (is (string? (:url val))))))

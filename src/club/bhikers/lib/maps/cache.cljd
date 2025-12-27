@@ -1,0 +1,69 @@
+(ns club.bhikers.lib.maps.cache
+  "Downloads cache service for offline region list."
+  (:require ["dart:convert" :as convert]
+            ["package:shared_preferences/shared_preferences.dart" :as prefs]
+            ["package:http/http.dart" :as http]
+            ["package:agus_maps_flutter/mirror_service.dart" :as mirror-service]
+            [club.bhikers.lib.logging :as logging]))
+
+(def ^:private cache-key "downloads_cache_v1")
+
+(defn init
+  "Initialize SharedPreferences. Returns Future<SharedPreferences>."
+  []
+  (prefs/SharedPreferences.getInstance))
+
+(defn- ->CachedDownloadsData [json-map]
+  (when json-map
+    (let [{:strs [mirrorName mirrorBaseUrl snapshotVersion regions cachedAt]} json-map]
+      {:mirror-name mirrorName
+       :mirror-base-url mirrorBaseUrl
+       :snapshot-version snapshotVersion
+       :regions (mapv #(mirror-service/MwmRegion.fromJson %) (or regions []))
+       :cached-at (when cachedAt (DateTime.parse cachedAt))})))
+
+(defn- CachedDownloadsData->json [data]
+  (let [{:keys [mirror-name mirror-base-url snapshot-version regions cached-at]} data]
+    {"mirrorName" mirror-name
+     "mirrorBaseUrl" mirror-base-url
+     "snapshotVersion" snapshot-version
+     "regions" (mapv #(.toJson ^mirror-service/MwmRegion %) regions)
+     "cachedAt" (when cached-at (.toIso8601String ^DateTime cached-at))}))
+
+(defn load-cache
+  "Load cached downloads data. Returns nil if not found or parse error."
+  [^prefs/SharedPreferences prefs-instance]
+  (when-let [json-str (.getString prefs-instance cache-key)]
+    (try
+      (->CachedDownloadsData (convert/jsonDecode json-str))
+      (catch Exception e
+        (logging/d "[DownloadsCache] Failed to parse cache: " e)
+        nil))))
+
+(defn save-cache
+  "Save downloads data to cache. Returns Future."
+  [^prefs/SharedPreferences prefs-instance data]
+  (let [json-str (convert/jsonEncode (CachedDownloadsData->json data))]
+    (.setString prefs-instance cache-key json-str)))
+
+(defn clear-cache
+  "Clear the cache. Returns Future."
+  [^prefs/SharedPreferences prefs-instance]
+  (.remove prefs-instance cache-key))
+
+(defn validate-cache
+  "Validate cache by checking if snapshot URL is accessible. Returns Future<bool>."
+  [data]
+  (let [url-str (str (:mirror-base-url data) (:snapshot-version data) "/")]
+    (try
+      (let [uri (Uri.parse url-str)
+            response (await (.timeout (http/head uri) (Duration .seconds 5)))
+            is-valid (= (.-statusCode ^http/Response response) 200)]
+        (logging/d "[DownloadsCache] Cache validation: " 
+                   (if is-valid "valid" "invalid") 
+                   " (HTTP " (.-statusCode ^http/Response response) ")")
+        is-valid)
+      (catch Exception e
+        (logging/d "[DownloadsCache] Cache validation failed: " e)
+        ;; On network error, assume cache is still valid for offline use
+        true))))

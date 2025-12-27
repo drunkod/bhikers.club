@@ -1,0 +1,33 @@
+(ns club.bhikers.lib.maps.storage
+  "MWM storage wrapper for managing downloaded map metadata."
+  (:require ["package:agus_maps_flutter/mwm_storage.dart" :as mwm-storage]))
+
+;; Re-export MwmMetadata for convenience
+(def MwmMetadata mwm-storage/MwmMetadata)
+
+(defn init
+  "Initialize MwmStorage asynchronously. Returns a Future<MwmStorage>."
+  []
+  ;; Based on example: _mwmStorage = await MwmStorage.create();
+  (mwm-storage/MwmStorage.create))
+
+(defn get-all [storage]
+  (.getAll ^mwm-storage/MwmStorage storage))
+
+(defn upsert [storage metadata]
+  (.upsert ^mwm-storage/MwmStorage storage metadata))
+
+(defn remove-region [storage region-name]
+  (.remove ^mwm-storage/MwmStorage storage region-name))
+
+(defn is-downloaded [storage region-name]
+  (.isDownloaded ^mwm-storage/MwmStorage storage region-name))
+
+(defn get-by-region [storage region-name]
+  (.getByRegion ^mwm-storage/MwmStorage storage region-name))
+
+(defn get-orphaned-regions [storage]
+  (.getOrphanedRegions ^mwm-storage/MwmStorage storage))
+
+(defn prune-orphaned [storage]
+  (.pruneOrphaned ^mwm-storage/MwmStorage storage))

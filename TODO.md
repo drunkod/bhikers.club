@@ -81,3 +81,9 @@ E/FlutterGeolocator(27655): Geolocator position updates started
 E/flutter (27655): [ERROR:flutter/runtime/dart_vm_initializer.cc(40)] Unhandled Exception: The location service on the device is disabled.
 E/flutter (27655): #0      GeolocatorAndroid.getPositionStream.<anonymous closure> (package:geolocator_android/src/geolocator_android.dart:202:7)
 
+test with https://github.com/greensopinion/flutter-vector-map-tiles?tab=readme-ov-file 10.0 version
+https://docs.flutter.dev/perf/impeller
+https://github.com/greensopinion/flutter-vector-map-tiles-examples/tree/10.0.0
+
+
+rewrite maps to https://github.com/bangonkali/agus-maps-flutter

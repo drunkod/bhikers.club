@@ -1,0 +1,48 @@
+(ns club.bhikers.lib.maps.mirror
+  "Mirror service wrapper for downloading map regions."
+  (:require ["package:agus_maps_flutter/mirror_service.dart" :as mirror-service]))
+
+(defn init
+  "Create a new MirrorService instance."
+  []
+  (mirror-service/MirrorService))
+
+(defn dispose
+  "Dispose of the mirror service."
+  [^mirror-service/MirrorService service]
+  (.dispose service))
+
+(defn measure-latencies
+  "Measure latencies to all mirrors. Returns Future."
+  [^mirror-service/MirrorService service]
+  (.measureLatencies service))
+
+(defn get-fastest-mirror
+  "Get the fastest available mirror."
+  [^mirror-service/MirrorService service]
+  (.getFastestMirror service))
+
+(defn get-snapshots
+  "Get available snapshots from a mirror. Returns Future<List<Snapshot>>."
+  [^mirror-service/MirrorService service mirror]
+  (.getSnapshots service mirror))
+
+(defn get-regions
+  "Get regions for a snapshot. Returns Future<List<MwmRegion>>."
+  [^mirror-service/MirrorService service mirror snapshot]
+  (.getRegions service mirror snapshot))
+
+(defn get-download-url
+  "Get download URL for a region."
+  [^mirror-service/MirrorService service mirror snapshot region]
+  (.getDownloadUrl service mirror snapshot region))
+
+(defn get-file-size
+  "Get file size for a URL. Returns Future<int?>."
+  [^mirror-service/MirrorService service url]
+  (.getFileSize service url))
+
+(defn download-to-file
+  "Download a file with progress callback. Returns Future<int>."
+  [^mirror-service/MirrorService service url file & {:keys [on-progress]}]
+  (.downloadToFile service url file .onProgress on-progress))

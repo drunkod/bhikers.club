@@ -33,13 +33,13 @@ test: ## Run tests
 	clj -M:test:cljd test
 
 run: ## Run app on device with logs (clj -M:cljd flutter)
-	clj -M:cljd flutter
+	export LIBS_VERSION=v0.0.35 && clj -M:cljd flutter
 
 compile: ## Compile ClojureDart code
 	clj -M:cljd compile
 
 apk: compile ## Build debug APK
-	flutter build apk \
+	export LIBS_VERSION=v0.0.35 && flutter build apk \
              --debug --pub --suppress-analytics \
              --target-platform android-arm,android-arm64
 
