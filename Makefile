@@ -32,8 +32,8 @@ locale-gen: ## Generate dart code for locale files
 test: ## Run tests
 	clj -M:test:cljd test
 
-run: ## Run app on device with logs (clj -M:cljd flutter)
-	clj -M:cljd flutter
+run: ## Run app on device with logs (usage: make run DEVICE=emulator-5554)
+	clj -M:cljd flutter -d $(DEVICE)
 
 compile: ## Compile ClojureDart code
 	clj -M:cljd compile
