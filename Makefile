@@ -34,7 +34,8 @@ test: ## Run tests
 
 run: ## Run app on device with logs (clj -M:cljd flutter)
 	export LIBS_VERSION=v0.0.35 && clj -M:cljd flutter
-
+# run: ## Run app for cloud ide on device with logs (usage: make run DEVICE=emulator-5554)
+# 	clj -M:cljd flutter -d $(DEVICE)
 compile: ## Compile ClojureDart code
 	clj -M:cljd compile
 
